@@ -147,15 +147,15 @@ function renderExercise(x){
           <strong>${x.m?.label ?? 'Unknown machine'}</strong>
           <div class="muscle">${x.g ?? ''} • ${x.t ?? ''}</div>
         </div>
-       <div class="weight">
+      <div class="weight">
   <button onclick="setW('${id}', ${wt - r.step})">−</button>
 
   <input
     type="number"
     min="0"
-    step="0.5"
+    step="${r.step}"
     value="${wt}"
-    onblur="setW('${id}', this.value)"
+    onblur="setW('${id}', Number(this.value))"
     onkeydown="if(event.key==='Enter'){ this.blur(); }"
     style="
       width:70px;
