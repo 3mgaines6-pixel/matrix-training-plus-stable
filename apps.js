@@ -100,8 +100,11 @@ let selectedDay = "Monday";
 function safeId(key){ return String(key).replace(/\W+/g,'_'); }
 function el(id){ return document.getElementById(id); }
 const w = m => userWeights[m] ?? 0;
-const setW = (m,v)=>{
-  const rounded = Math.round((v + Number.EPSILON) * 10) / 10;
+const setW = (m, v) => {
+  const num = parseFloat(v);
+  if (Number.isNaN(num)) return; // prevent erase
+
+  const rounded = Math.round((num + Number.EPSILON) * 10) / 10;
   userWeights[m] = Math.max(0, rounded);
   saveWeights();
   render();
