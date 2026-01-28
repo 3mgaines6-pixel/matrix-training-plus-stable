@@ -343,40 +343,5 @@ document.addEventListener('DOMContentLoaded', ()=>{
 
   checkAutoRotate(4);
   render();
-  // === DEBUG BLOCK ===
-(function(){
-  const box = document.createElement('div');
-  box.style.cssText = 'position:fixed;right:8px;bottom:8px;background:#000;color:#0f0;padding:8px;border-radius:8px;font-size:12px;z-index:99999;max-width:260px;';
-  box.id = 'mtp-live-debug';
-  box.textContent = 'Debug starting...';
-  document.body.appendChild(box);
-
-  function update(msg){
-    const el = document.getElementById('mtp-live-debug');
-    if(el) el.textContent = msg;
-  }
-
-  try {
-    const btnC = document.getElementById('btn-cardio');
-    const btnT = document.getElementById('btn-trends');
-    const btnW = document.getElementById('btn-summary');
-
-    const hasC = typeof renderCardio === 'function';
-    const hasT = typeof renderTrends === 'function';
-    const hasW = typeof renderWeeklySummary === 'function';
-
-    // Force attach handlers
-    if(btnC) btnC.onclick = () => { update('Cardio clicked'); renderCardio(); };
-    if(btnT) btnT.onclick = () => { update('Trends clicked'); renderTrends(); };
-    if(btnW) btnW.onclick = () => { update('Weekly clicked'); renderWeeklySummary(); };
-
-    update(
-      `Buttons: C:${!!btnC} T:${!!btnT} W:${!!btnW} | ` +
-      `Funcs: C:${hasC} T:${hasT} W:${hasW}`
-    );
-
-  } catch(e){
-    update('ERROR: ' + e.message);
-  }
-})();
+  
 });
