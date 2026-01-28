@@ -144,11 +144,25 @@ function renderExercise(x){
           <strong>${x.m?.label ?? 'Unknown machine'}</strong>
           <div class="muscle">${x.g ?? ''} • ${x.t ?? ''}</div>
         </div>
-        <div class="weight">
-          <button onclick="setW('${id}',${wt - r.step})">−</button>
-          <span>${wt} lb</span>
-          <button onclick="setW('${id}',${wt + r.step})">+</button>
-        </div>
+       <div class="weight">
+  <button onclick="setW('${id}', ${wt - r.step})">−</button>
+
+  <input
+    type="number"
+    min="0"
+    step="0.5"
+    value="${wt}"
+    onblur="setW('${id}', this.value)"
+    onkeydown="if(event.key==='Enter'){ this.blur(); }"
+    style="
+      width:70px;
+      text-align:center;
+      font-weight:600;
+    "
+  /> lb
+
+  <button onclick="setW('${id}', ${wt + r.step})">+</button>
+</div>
       </div>
       <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
       <p>${lastText}</p>
