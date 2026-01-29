@@ -1,3 +1,8 @@
+workout.innerHTML = `
+  <h1>${selectedDay} — ${d.title}</h1>
+  ${renderDayRules(d)}
+  ${d.ex.map(x => renderExercise(x)).join('')}
+`;
 /****************************
  * MATRIX TRAINING PLUS
  * apps.js (separate file)
