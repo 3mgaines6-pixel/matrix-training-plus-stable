@@ -180,7 +180,8 @@ function renderExercise(x){
 
 /* ===== VIEWS ===== */
 function renderDayRules(day){
-  const d = workouts[day];
+  const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
+  const d = plan?.[day];
   if(!d) return '';
 
   const typesUsed = [...new Set(d.ex.map(x => x.t))];
