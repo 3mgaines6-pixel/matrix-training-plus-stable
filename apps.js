@@ -139,38 +139,47 @@ function renderExercise(x){
   const wt = userWeights[id] || 0;
   const last = history[id]?.[0];
   const lastText = last ? `Last: ${last.w} · ${last.sets.join('/')}` : 'No history';
-  const readyBtn = (id !== 'UNKNOWN' && earned(id,x.t)) ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">Ready to increase +${r.step}</button>` : '';
+  const readyBtn =
+    (id !== 'UNKNOWN' && earned(id,x.t))
+      ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">
+           Ready to increase +${r.step}
+         </button>`
+      : '';
+
   return `
     <div class="exercise ${x.t?.toLowerCase() || ''}">
+      
       <div class="exercise-header">
         <div>
           <span class="badge-number">${x.m?.number ?? '?'}</span>
           <strong>${x.m?.label ?? 'Unknown machine'}</strong>
           <div class="muscle">${x.g ?? ''} • ${x.t ?? ''}</div>
         </div>
-      <div class="weight">
-  <button onclick="setW('${id}', ${wt - r.step})">−</button>
 
-  <input
-    type="number"
-    min="0"
-    step="${r.step}"
-    value="${wt}"
-    onblur="setW('${id}', Number(this.value))"
-    onkeydown="if(event.key==='Enter'){ this.blur(); }"
-    style="
-      width:70px;
-      text-align:center;
-      font-weight:600;
-    "
-  /> lb
+        <div class="weight">
+          <button onclick="setW('${id}', ${wt - r.step})">−</button>
 
-  <button onclick="setW('${id}', ${wt + r.step})">+</button>
-</div>
+          <input
+            type="number"
+            min="0"
+            step="${r.step}"
+            value="${wt}"
+            onblur="setW('${id}', this.value)"
+            onkeydown="if(event.key==='Enter'){ this.blur(); }"
+            style="width:70px;text-align:center;font-weight:600;"
+          /> lb
+
+          <button onclick="setW('${id}', ${wt + r.step})">+</button>
+        </div>
       </div>
-      <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
+
+      <p><strong>${x.t}</strong>: ${r.sets} sets · ${r.reps} reps · Tempo ${r.tempo}</p>
       <p>${lastText}</p>
-      ${Array.from({length:r.sets}).map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`).join('<br>')}
+
+      ${Array.from({length:r.sets})
+        .map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`)
+        .join('<br>')}
+
       <div style="margin-top:8px">
         <button onclick="logEx('${id}','${x.t}')">Log</button>
         ${readyBtn}
