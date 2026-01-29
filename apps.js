@@ -179,6 +179,24 @@ function renderExercise(x){
 }
 
 /* ===== VIEWS ===== */
+function renderDayRules(day){
+  const d = workouts[day];
+  if(!d) return '';
+
+  const typesUsed = [...new Set(d.ex.map(x => x.t))];
+
+  return `
+    <section class="day-rules">
+      ${typesUsed.map(t => `
+        <div class="rule-chip ${t.toLowerCase()}">
+          <strong>${t}</strong>
+          <span>${RULES[t].sets} × ${RULES[t].reps}</span>
+          <span>Tempo ${RULES[t].tempo}</span>
+        </div>
+      `).join('')}
+    </section>
+  `;
+}
 function renderDayView(){
   const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
   if(!plan){
@@ -190,8 +208,11 @@ function renderDayView(){
     workout.innerHTML = `<section class="workout-container"><p>No day "${selectedDay}" in current plan.</p></section>`;
     return;
   }
-  workout.innerHTML = `<h1>${selectedDay} — ${d.title}</h1>${d.ex.map(x=>renderExercise(x)).join('')}`;
-}
+  workout.innerHTML = `
+  <h1>${selectedDay} — ${d.title}</h1>
+  ${renderDayRules(selectedDay)}
+  ${d.ex.map(x => renderExercise(x)).join('')}
+`;
 
 /* Cardio view */
 function renderCardio(){
