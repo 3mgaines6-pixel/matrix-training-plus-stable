@@ -102,13 +102,13 @@ function el(id){ return document.getElementById(id); }
 const w = m => userWeights[m] ?? 0;
 const setW = (m, v) => {
   const num = parseFloat(v);
-  if (Number.isNaN(num)) return; // prevent erase
+  if (Number.isNaN(num)) return;
 
-  const rounded = Math.round((num + Number.EPSILON) * 10) / 10;
-  userWeights[m] = Math.max(0, rounded);
+  userWeights[m] = Math.max(0, num);
   saveWeights();
-  render();
+  showToast(`Weight set: ${userWeights[m]} lb`);
 };
+
 const topHit = (t, sets) => sets.every(r => r >= RULES[t].top);
 const earned = (m,t) => {
   const entries = history[m] || [];
