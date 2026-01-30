@@ -9,6 +9,30 @@
   --radius:14px;
   --text:#f1f1f1;
 }
+.day-rules {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0 20px;
+  flex-wrap: wrap;
+}
+
+.rule-block {
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.06);
+  font-size: 13px;
+}
+
+.rule-block strong {
+  display: block;
+  font-size: 12px;
+  opacity: 0.8;
+  margin-bottom: 2px;
+}
+
+.rule-block.heavy { border-left: 3px solid #ff6b6b; }
+.rule-block.light { border-left: 3px solid #4dabf7; }
+.rule-block.core  { border-left: 3px solid #51cf66; }
 
 *{box-sizing:border-box}
 body{
