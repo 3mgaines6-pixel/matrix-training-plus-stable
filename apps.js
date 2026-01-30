@@ -131,8 +131,6 @@ function showToast(msg, ms=1400){
 }
 
 /* ===== RENDER HELPERS ===== */
-
-
 function renderExercise(x){
   const r = RULES[x.t] || {sets:0,reps:'',tempo:'',step:0};
   const id = x.m?.id || 'UNKNOWN';
@@ -169,7 +167,7 @@ function renderExercise(x){
   <button onclick="setW('${id}', ${wt + r.step})">+</button>
 </div>
       </div>
-      
+      <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
       <p>${lastText}</p>
       ${Array.from({length:r.sets}).map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`).join('<br>')}
       <div style="margin-top:8px">
@@ -192,8 +190,8 @@ function renderDayView(){
     workout.innerHTML = `<section class="workout-container"><p>No day "${selectedDay}" in current plan.</p></section>`;
     return;
   }
-workout.innerHTML = `<h1>${selectedDay} — ${d.title}</h1>${d.ex.map(x=>renderExercise(x)).join('')}`;
-
+  workout.innerHTML = `<h1>${selectedDay} — ${d.title}</h1>${d.ex.map(x=>renderExercise(x)).join('')}`;
+}
 
 /* Cardio view */
 function renderCardio(){
