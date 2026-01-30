@@ -1,4 +1,3 @@
-alert("JS LOADED");
 /****************************
  * MATRIX TRAINING PLUS
  * apps.js (separate file)
@@ -139,47 +138,38 @@ function renderExercise(x){
   const wt = userWeights[id] || 0;
   const last = history[id]?.[0];
   const lastText = last ? `Last: ${last.w} · ${last.sets.join('/')}` : 'No history';
-  const readyBtn =
-    (id !== 'UNKNOWN' && earned(id,x.t))
-      ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">
-           Ready to increase +${r.step}
-         </button>`
-      : '';
-
+  const readyBtn = (id !== 'UNKNOWN' && earned(id,x.t)) ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">Ready to increase +${r.step}</button>` : '';
   return `
     <div class="exercise ${x.t?.toLowerCase() || ''}">
-      
       <div class="exercise-header">
         <div>
           <span class="badge-number">${x.m?.number ?? '?'}</span>
           <strong>${x.m?.label ?? 'Unknown machine'}</strong>
           <div class="muscle">${x.g ?? ''} • ${x.t ?? ''}</div>
         </div>
+      <div class="weight">
+  <button onclick="setW('${id}', ${wt - r.step})">−</button>
 
-        <div class="weight">
-          <button onclick="setW('${id}', ${wt - r.step})">−</button>
+  <input
+    type="number"
+    min="0"
+    step="${r.step}"
+    value="${wt}"
+    onblur="setW('${id}', Number(this.value))"
+    onkeydown="if(event.key==='Enter'){ this.blur(); }"
+    style="
+      width:70px;
+      text-align:center;
+      font-weight:600;
+    "
+  /> lb
 
-          <input
-            type="number"
-            min="0"
-            step="${r.step}"
-            value="${wt}"
-            onblur="setW('${id}', this.value)"
-            onkeydown="if(event.key==='Enter'){ this.blur(); }"
-            style="width:70px;text-align:center;font-weight:600;"
-          /> lb
-
-          <button onclick="setW('${id}', ${wt + r.step})">+</button>
-        </div>
+  <button onclick="setW('${id}', ${wt + r.step})">+</button>
+</div>
       </div>
-
-      <p><strong>${x.t}</strong>: ${r.sets} sets · ${r.reps} reps · Tempo ${r.tempo}</p>
+      <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
       <p>${lastText}</p>
-
-      ${Array.from({length:r.sets})
-        .map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`)
-        .join('<br>')}
-
+      ${Array.from({length:r.sets}).map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`).join('<br>')}
       <div style="margin-top:8px">
         <button onclick="logEx('${id}','${x.t}')">Log</button>
         ${readyBtn}
@@ -189,25 +179,6 @@ function renderExercise(x){
 }
 
 /* ===== VIEWS ===== */
-function renderDayRules(day){
-  const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
-  const d = plan?.[day];
-  if(!d) return '';
-
-  const typesUsed = [...new Set(d.ex.map(x => x.t))];
-
-  return `
-    <section class="day-rules">
-      ${typesUsed.map(t => `
-        <div class="rule-chip ${t.toLowerCase()}">
-          <strong>${t}</strong>
-          <span>${RULES[t].sets} × ${RULES[t].reps}</span>
-          <span>Tempo ${RULES[t].tempo}</span>
-        </div>
-      `).join('')}
-    </section>
-  `;
-}
 function renderDayView(){
   const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
   if(!plan){
@@ -219,11 +190,8 @@ function renderDayView(){
     workout.innerHTML = `<section class="workout-container"><p>No day "${selectedDay}" in current plan.</p></section>`;
     return;
   }
-  workout.innerHTML = `
-  <h1>${selectedDay} — ${d.title}</h1>
-  ${renderDayRules(selectedDay)}
-  ${d.ex.map(x => renderExercise(x)).join('')}
-`;
+  workout.innerHTML = `<h1>${selectedDay} — ${d.title}</h1>${d.ex.map(x=>renderExercise(x)).join('')}`;
+}
 
 /* Cardio view */
 function renderCardio(){
