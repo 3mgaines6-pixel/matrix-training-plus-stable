@@ -131,6 +131,31 @@ function showToast(msg, ms=1400){
 }
 
 /* ===== RENDER HELPERS ===== */
+function renderDayRules(day) {
+  const ex = day.ex || [];
+  const types = [...new Set(ex.map(x => x.t))];
+
+  return `
+    <div class="day-rules">
+      ${types.includes('HEAVY') ? `
+        <div class="rule-block heavy">
+          <strong>HEAVY SETS</strong>
+          <div>3 sets · 6–8 reps · Tempo 3–1–2</div>
+        </div>` : ''}
+      ${types.includes('LIGHT') ? `
+        <div class="rule-block light">
+          <strong>LIGHT SETS</strong>
+          <div>3 sets · 10–12 reps · Tempo 2–1–2</div>
+        </div>` : ''}
+      ${types.includes('CORE') ? `
+        <div class="rule-block core">
+          <strong>CORE</strong>
+          <div>2 sets · 12–15 reps · Tempo 2–2–2</div>
+        </div>` : ''}
+    </div>
+  `;
+}
+
 function renderExercise(x){
   const r = RULES[x.t] || {sets:0,reps:'',tempo:'',step:0};
   const id = x.m?.id || 'UNKNOWN';
