@@ -197,10 +197,16 @@ function selectDay(d){
 }
 
 function render(){
-  if(currentView==="cardio") return renderCardio();
-  if(currentView==="trends") return renderTrends();
-  if(currentView==="summary") return renderWeeklySummary();
-  renderDayView();
+  if(!workout){
+    console.error('NO #workout ELEMENT');
+    return;
+  }
+
+  workout.innerHTML = `
+    <h2 style="color:lime">RENDER OK</h2>
+    <p>View: ${currentView}</p>
+    <p>Day: ${selectedDay}</p>
+  `;
 }
 
 /* ===== INIT ===== */
