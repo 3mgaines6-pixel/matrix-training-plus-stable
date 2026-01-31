@@ -134,13 +134,22 @@ function showToast(msg, ms=1400){
 
 /* ===== RENDER HELPERS ===== */
 function renderExercise(x){
-  const r = RULES[x.t] || {sets:0,reps:'',tempo:'',step:0};
+  const r = RULES[x.t] || { sets:0, reps:'', tempo:'', step:0 };
   const id = x.m?.id || 'UNKNOWN';
-  const sid = safeId(id);
   const wt = userWeights[id] || 0;
+
   const last = history[id]?.[0];
-  const lastText = last ? `Last: ${last.w} · ${last.sets.join('/')}` : 'No history';
-  const readyBtn = (id !== 'UNKNOWN' && earned(id,x.t)) ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">Ready to increase +${r.step}</button>` : '';
+  const lastText = last
+    ? `Last: ${last.sets.map(s => `${s.w}×${s.r}`).join(' / ')}`
+    : 'No history';
+
+  const readyBtn =
+    (id !== 'UNKNOWN' && earned(id, x.t))
+      ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">
+           Ready to increase +${r.step}
+         </button>`
+      : '';
+
   return `
     <div class="exercise ${x.t?.toLowerCase() || ''}">
       <div class="exercise-header">
@@ -149,52 +158,49 @@ function renderExercise(x){
           <strong>${x.m?.label ?? 'Unknown machine'}</strong>
           <div class="muscle">${x.g ?? ''} • ${x.t ?? ''}</div>
         </div>
-      <div class="weight">
-  <button onclick="setW('${id}', ${wt - r.step})">−</button>
 
-  <input
-    type="number"
-    min="0"
-    step="${r.step}"
-    value="${wt}"
-    onblur="setW('${id}', Number(this.value))"
-    onkeydown="if(event.key==='Enter'){ this.blur(); }"
-    style="
-      width:70px;
-      text-align:center;
-      font-weight:600;
-    "
-  /> lb
-
-  <button onclick="setW('${id}', ${wt + r.step})">+</button>
-</div>
+        <div class="weight">
+          <button onclick="setW('${id}', ${wt - r.step})">−</button>
+          <span>${wt} lb</span>
+          <button onclick="setW('${id}', ${wt + r.step})">+</button>
+        </div>
       </div>
-      <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
-      <p>${lastText}</p>${Array.from({ length: r.sets }).map((_, i) => `
-  <div class="set-row">
-    Set ${i + 1}:
-    <input
-      type="number"
-      placeholder="lb"
-      style="width:60px"
-      oninput="
-        liveSets['${id}'] = liveSets['${id}'] || [];
-        liveSets['${id}'][${i}] = liveSets['${id}'][${i}] || {};
-        liveSets['${id}'][${i}].w = Number(this.value);
-      "
-    >
-    <input
-      type="number"
-      placeholder="reps"
-      style="width:60px"
-      oninput="
-        liveSets['${id}'] = liveSets['${id}'] || [];
-        liveSets['${id}'][${i}] = liveSets['${id}'][${i}] || {};
-        liveSets['${id}'][${i}].r = Number(this.value);
-      "
-    >
-  </div>
-`).join('')}
+
+      <div class="day-rules">
+        ${r.sets} sets • ${r.reps} reps • Tempo ${r.tempo}
+      </div>
+
+      <div class="sets">
+        ${Array.from({ length: r.sets }).map((_, i) => `
+          <div class="set-row">
+            <span>Set ${i + 1}</span>
+
+            <input
+              type="number"
+              placeholder="lb"
+              value="${liveSets[id]?.[i]?.w ?? wt}"
+              oninput="updateLiveSet('${id}', ${i}, 'w', this.value)"
+            />
+
+            <input
+              type="number"
+              placeholder="reps"
+              value="${liveSets[id]?.[i]?.r ?? ''}"
+              oninput="updateLiveSet('${id}', ${i}, 'r', this.value)"
+            />
+          </div>
+        `).join('')}
+      </div>
+
+      <p class="last">${lastText}</p>
+
+      <div style="margin-top:8px">
+        <button onclick="logEx('${id}','${x.t}')">Log</button>
+        ${readyBtn}
+      </div>
+    </div>
+  `;
+}
 
 /* ===== VIEWS ===== */
 function renderDayView(){
