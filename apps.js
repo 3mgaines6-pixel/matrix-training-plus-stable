@@ -203,6 +203,35 @@ function renderExercise(x){
 }
 
 /* ===== VIEWS ===== */
+/****************************
+ * DAY RULES HEADER (SAFE)
+ ****************************/
+function renderDayRules(d){
+  // Absolute safety checks
+  if (!d || !Array.isArray(d.ex)) return '';
+
+  // Collect unique training types for the day
+  const typesUsed = [...new Set(
+    d.ex
+      .map(x => x.t)
+      .filter(t => RULES[t])
+  )];
+
+  if (typesUsed.length === 0) return '';
+
+  return `
+    <section class="day-rules">
+      ${typesUsed.map(t => `
+        <div class="rule-chip ${t.toLowerCase()}">
+          <strong>${t}</strong>
+          <span>${RULES[t].sets} × ${RULES[t].reps}</span>
+          <span>Tempo ${RULES[t].tempo}</span>
+        </div>
+      `).join('')}
+    </section>
+  `;
+}
+
 function renderDayView(){
   const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
   if(!plan){
