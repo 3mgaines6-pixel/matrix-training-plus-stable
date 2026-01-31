@@ -1,5 +1,5 @@
 /****************************
- * MATRIX TRAINING PLU
+ * MATRIX TRAINING PLUS
  * apps.js (separate file)
  ****************************/
 
@@ -95,8 +95,6 @@ if (Array.isArray(rotationPlans) && rotationPlans.length > 0) {
 
 /* ===== STATE ===== */
 let selectedDay = "Monday";
-/* ===== LIVE SET STATE (Option A) ===== */
-const liveSets = {};
 
 /* ===== HELPERS ===== */
 function safeId(key){ return String(key).replace(/\W+/g,'_'); }
@@ -104,13 +102,13 @@ function el(id){ return document.getElementById(id); }
 const w = m => userWeights[m] ?? 0;
 const setW = (m, v) => {
   const num = parseFloat(v);
-  if (Number.isNaN(num)) return;
+  if (Number.isNaN(num)) return; // prevent erase
 
-  userWeights[m] = Math.max(0, num);
+  const rounded = Math.round((num + Number.EPSILON) * 10) / 10;
+  userWeights[m] = Math.max(0, rounded);
   saveWeights();
-  showToast(`Weight set: ${userWeights[m]} lb`);
+  render();
 };
-
 const topHit = (t, sets) => sets.every(r => r >= RULES[t].top);
 const earned = (m,t) => {
   const entries = history[m] || [];
@@ -134,22 +132,13 @@ function showToast(msg, ms=1400){
 
 /* ===== RENDER HELPERS ===== */
 function renderExercise(x){
-  const r = RULES[x.t] || { sets:0, reps:'', tempo:'', step:0 };
+  const r = RULES[x.t] || {sets:0,reps:'',tempo:'',step:0};
   const id = x.m?.id || 'UNKNOWN';
+  const sid = safeId(id);
   const wt = userWeights[id] || 0;
-
   const last = history[id]?.[0];
-  const lastText = last
-    ? `Last: ${last.sets.map(s => `${s.w}×${s.r}`).join(' / ')}`
-    : 'No history';
-
-  const readyBtn =
-    (id !== 'UNKNOWN' && earned(id, x.t))
-      ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">
-           Ready to increase +${r.step}
-         </button>`
-      : '';
-
+  const lastText = last ? `Last: ${last.w} · ${last.sets.join('/')}` : 'No history';
+  const readyBtn = (id !== 'UNKNOWN' && earned(id,x.t)) ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">Ready to increase +${r.step}</button>` : '';
   return `
     <div class="exercise ${x.t?.toLowerCase() || ''}">
       <div class="exercise-header">
@@ -158,42 +147,29 @@ function renderExercise(x){
           <strong>${x.m?.label ?? 'Unknown machine'}</strong>
           <div class="muscle">${x.g ?? ''} • ${x.t ?? ''}</div>
         </div>
+      <div class="weight">
+  <button onclick="setW('${id}', ${wt - r.step})">−</button>
 
-        <div class="weight">
-          <button onclick="setW('${id}', ${wt - r.step})">−</button>
-          <span>${wt} lb</span>
-          <button onclick="setW('${id}', ${wt + r.step})">+</button>
-        </div>
+  <input
+    type="number"
+    min="0"
+    step="${r.step}"
+    value="${wt}"
+    onblur="setW('${id}', Number(this.value))"
+    onkeydown="if(event.key==='Enter'){ this.blur(); }"
+    style="
+      width:70px;
+      text-align:center;
+      font-weight:600;
+    "
+  /> lb
+
+  <button onclick="setW('${id}', ${wt + r.step})">+</button>
+</div>
       </div>
-
-      <div class="day-rules">
-        ${r.sets} sets • ${r.reps} reps • Tempo ${r.tempo}
-      </div>
-
-      <div class="sets">
-        ${Array.from({ length: r.sets }).map((_, i) => `
-          <div class="set-row">
-            <span>Set ${i + 1}</span>
-
-            <input
-              type="number"
-              placeholder="lb"
-              value="${liveSets[id]?.[i]?.w ?? wt}"
-              oninput="updateLiveSet('${id}', ${i}, 'w', this.value)"
-            />
-
-            <input
-              type="number"
-              placeholder="reps"
-              value="${liveSets[id]?.[i]?.r ?? ''}"
-              oninput="updateLiveSet('${id}', ${i}, 'r', this.value)"
-            />
-          </div>
-        `).join('')}
-      </div>
-
-      <p class="last">${lastText}</p>
-
+      <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
+      <p>${lastText}</p>
+      ${Array.from({length:r.sets}).map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`).join('<br>')}
       <div style="margin-top:8px">
         <button onclick="logEx('${id}','${x.t}')">Log</button>
         ${readyBtn}
@@ -203,72 +179,19 @@ function renderExercise(x){
 }
 
 /* ===== VIEWS ===== */
-/****************************
- * DAY RULES HEADER (SAFE)
- ****************************/
-function renderDayRules(d){
-  // Absolute safety checks
-  if (!d || !Array.isArray(d.ex)) return '';
-
-  // Collect unique training types for the day
-  const typesUsed = [...new Set(
-    d.ex
-      .map(x => x.t)
-      .filter(t => RULES[t])
-  )];
-
-  if (typesUsed.length === 0) return '';
-
-  return `
-    <section class="day-rules">
-      ${typesUsed.map(t => `
-        <div class="rule-chip ${t.toLowerCase()}">
-          <strong>${t}</strong>
-          <span>${RULES[t].sets} × ${RULES[t].reps}</span>
-          <span>Tempo ${RULES[t].tempo}</span>
-        </div>
-      `).join('')}
-    </section>
-  `;
-}
-
-
-/****************************
- * DAY VIEW
- ****************************/
 function renderDayView(){
   const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
   if(!plan){
-    workout.innerHTML = `
-      <section class="workout-container">
-        <p>No workout plan found.</p>
-      </section>
-    `;
+    workout.innerHTML = '<section class="workout-container"><p>No workout plan found.</p></section>';
     return;
   }
-
   const d = plan[selectedDay];
   if(!d){
-    workout.innerHTML = `
-      <section class="workout-container">
-        <p>No day "${selectedDay}" in current plan.</p>
-      </section>
-    `;
+    workout.innerHTML = `<section class="workout-container"><p>No day "${selectedDay}" in current plan.</p></section>`;
     return;
   }
-
-  let html = `
-    <h1>${selectedDay} — ${d.title}</h1>
-  `;
-
-  // 👇 THIS IS THE LINE YOU WERE MISSING
-  html += renderDayRules(d);
-
-  html += d.ex.map(x => renderExercise(x)).join('');
-
-  workout.innerHTML = html;
+  workout.innerHTML = `<h1>${selectedDay} — ${d.title}</h1>${d.ex.map(x=>renderExercise(x)).join('')}`;
 }
-
 
 /* Cardio view */
 function renderCardio(){
@@ -364,36 +287,31 @@ function renderWeeklySummary(){
 }
 
 /* ===== LOGGING ===== */
-/* ===== LIVE SET HANDLER (Option A) ===== */
-function updateLiveSet(machine, index, field, value){
-  liveSets[machine] = liveSets[machine] || [];
-  liveSets[machine][index] = liveSets[machine][index] || { w: 0, r: 0 };
-  liveSets[machine][index][field] = Number(value) || 0;
-}
-
-function logEx(m, t){
-  const sets = (liveSets[m] || [])
-    .filter(s => s && s.w > 0 && s.r > 0)
-    .map(s => ({ w: Number(s.w), r: Number(s.r) }));
-
-  if (!sets.length) {
-    alert("Enter at least one set before logging.");
-    return;
+function logEx(m,t){
+  const r = RULES[t];
+  const sets=[];
+  for(let i=0;i<r.sets;i++){
+    const input = document.getElementById(`${safeId(m)}-${i}`);
+    sets.push(+ (input?.value || 0));
   }
-
   history[m] = history[m] || [];
-  history[m].unshift({
-    d: Date.now(),
-    sets
-  });
-  history[m] = history[m].slice(0, 50);
-
+  history[m].unshift({ d: Date.now(), w: w(m), sets });
+  history[m] = history[m].slice(0,50);
   saveHistory();
-  delete liveSets[m]; // clear after log
-  showToast("Logged ✓");
+  showToast('Logged ✓');
   render();
 }
 
+/* ===== PROGRESSION ===== */
+function confirmIncrease(id,type){
+  const last3 = (history[id]||[]).slice(0,3).map(h=>h.sets.join('/')).join(' | ');
+  const step = RULES[type].step;
+  const ok = confirm(`Last 3 sessions: ${last3}\nIncrease weight by ${step}?`);
+  if(ok){
+    setW(id, (userWeights[id]||0) + step);
+    showToast('Weight increased ✓');
+  }
+}
 
 /* ===== AUTO ROTATION ===== */
 function checkAutoRotate(weeksToRotate = 4){
