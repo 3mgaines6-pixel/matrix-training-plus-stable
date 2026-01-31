@@ -289,14 +289,13 @@ function renderWeeklySummary(){
 }
 
 /* ===== LOGGING ===== */
-function logEx(m,t){
-  const sets = (liveSets[m] || []).map(s => ({
-    w: s.w,
-    r: s.r
-  }));
+function logEx(m, t){
+  const sets = (liveSets[m] || [])
+    .filter(s => s && s.w > 0 && s.r > 0)
+    .map(s => ({ w: Number(s.w), r: Number(s.r) }));
 
-  if(!sets.length){
-    showToast('Enter at least one set');
+  if (!sets.length) {
+    alert("Enter at least one set before logging.");
     return;
   }
 
@@ -305,15 +304,11 @@ function logEx(m,t){
     d: Date.now(),
     sets
   });
-  history[m] = history[m].slice(0,50);
+  history[m] = history[m].slice(0, 50);
+
   saveHistory();
-
-  // update base weight to last working set
-  userWeights[m] = sets[sets.length-1].w;
-  saveWeights();
-
-  liveSets[m] = []; // clear for next time
-  showToast('Workout logged ✓');
+  delete liveSets[m]; // clear after log
+  showToast("Logged ✓");
   render();
 }
 
