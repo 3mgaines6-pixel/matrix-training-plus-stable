@@ -235,10 +235,12 @@ function renderDayRules(d){
 /****************************
  * DAY VIEW RENDER (SAFE)
  ****************************/
+/****************************
+ * DAY VIEW
+ ****************************/
 function renderDayView(){
-  const plan = rotationPlans[meta.weekIndex];
-
-  if (!plan) {
+  const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
+  if(!plan){
     workout.innerHTML = `
       <section class="workout-container">
         <p>No workout plan found.</p>
@@ -248,25 +250,22 @@ function renderDayView(){
   }
 
   const d = plan[selectedDay];
-
-  if (!d) {
+  if(!d){
     workout.innerHTML = `
       <section class="workout-container">
-        <p>No workout for ${selectedDay}.</p>
+        <p>No day "${selectedDay}" in current plan.</p>
       </section>
     `;
     return;
   }
 
-  // Build HTML in parts (important for safety)
   let html = `
     <h1>${selectedDay} — ${d.title}</h1>
   `;
 
-  // Add rules header (cannot crash)
+  // 👇 THIS IS THE LINE YOU WERE MISSING
   html += renderDayRules(d);
 
-  // Add exercises (cannot be blocked by rules)
   html += d.ex.map(x => renderExercise(x)).join('');
 
   workout.innerHTML = html;
