@@ -95,6 +95,8 @@ if (Array.isArray(rotationPlans) && rotationPlans.length > 0) {
 
 /* ===== STATE ===== */
 let selectedDay = "Monday";
+/* ===== LIVE SET STATE (Option A) ===== */
+const liveSets = {};
 
 /* ===== HELPERS ===== */
 function safeId(key){ return String(key).replace(/\W+/g,'_'); }
