@@ -1,8 +1,10 @@
+console.log('TOP OF FILE');
+
 /****************************
  * MATRIX TRAINING PLU
  * apps.js (separate file)
  ****************************/
-console.log('APPS.JS LOADED');
+
 
 let currentView = 'workout'; // workout | cardio | trends | summary
 
