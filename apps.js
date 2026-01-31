@@ -106,9 +106,18 @@ const setW = (m, v) => {
   const num = parseFloat(v);
   if (Number.isNaN(num)) return;
 
-  userWeights[m] = Math.max(0, num);
+  const next = Math.max(0, num);
+  userWeights[m] = next;
   saveWeights();
-  showToast(`Weight set: ${userWeights[m]} lb`);
+
+  // 🔑 Sync default weight into live sets
+  liveSets[m] = liveSets[m] || [];
+  liveSets[m].forEach(s => {
+    if (s && (!s.w || s.w === 0)) s.w = next;
+  });
+
+  showToast(`Weight set: ${next} lb`);
+  render(); // 🔥 required
 };
 
 const topHit = (t, sets) => sets.every(r => r >= RULES[t].top);
@@ -367,19 +376,36 @@ function renderWeeklySummary(){
 /* ===== LIVE SET HANDLER (Option A) ===== */
 function updateLiveSet(machine, index, field, value){
   liveSets[machine] = liveSets[machine] || [];
-  liveSets[machine][index] = liveSets[machine][index] || { w: 0, r: 0 };
-  liveSets[machine][index][field] = Number(value) || 0;
+  liveSets[machine][index] = liveSets[machine][index] || {};
+
+  // Store raw value, not coerced
+  liveSets[machine][index][field] = value;
 }
+
 
 function logEx(m, t){
   const sets = (liveSets[m] || [])
-    .filter(s => s && s.w > 0 && s.r > 0)
-    .map(s => ({ w: Number(s.w), r: Number(s.r) }));
+    .map(s => ({
+      w: Number(s?.w),
+      r: Number(s?.r)
+    }))
+    .filter(s => s.w > 0 && s.r > 0);
 
   if (!sets.length) {
     alert("Enter at least one set before logging.");
     return;
   }
+
+  history[m] = history[m] || [];
+  history[m].unshift({ d: Date.now(), sets });
+  history[m] = history[m].slice(0, 50);
+
+  saveHistory();
+  delete liveSets[m];
+  showToast("Logged ✓");
+  render();
+}
+
 
   history[m] = history[m] || [];
   history[m].unshift({
