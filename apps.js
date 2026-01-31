@@ -1,6 +1,6 @@
 /****************************
  * MATRIX TRAINING PLUS
- * apps.js (separate file)
+ * apps.js (updated)
  ****************************/
 
 /* ===== STORAGE KEYS ===== */
@@ -23,10 +23,11 @@ const saveCardio=()=>save(CARDIO_KEY,cardio);
 const saveMeta=()=>save(META_KEY,meta);
 
 /* ===== RULES ===== */
+/* step is 5 lb for all types; you can still override manually */
 const RULES = {
-  HEAVY:{sets:3,reps:"6–8",top:8,tempo:"3–1–2",step:5},
-  LIGHT:{sets:3,reps:"10–12",top:12,tempo:"2–1–2",step:2.5},
-  CORE:{sets:2,reps:"12–15",top:15,tempo:"2–2–2",step:2.5}
+  HEAVY:{sets:3,reps:"6–8", top:8,  tempo:"3–1–2", step:5},
+  LIGHT:{sets:3,reps:"10–12",top:12, tempo:"2–1–2", step:5},
+  CORE:{sets:2,reps:"12–15",top:15, tempo:"2–2–2", step:5}
 };
 
 /* ===== MACHINE MAP ===== */
@@ -99,35 +100,83 @@ let selectedDay = "Monday";
 /* ===== HELPERS ===== */
 function safeId(key){ return String(key).replace(/\W+/g,'_'); }
 function el(id){ return document.getElementById(id); }
-const w = m => userWeights[m] ?? 0;
-const setW = (m, v) => {
+
+/* per-exercise, per-type weight */
+const w = (m,t) => (userWeights[m]?.[t]) ?? 0;
+
+/* set weight with safety + warning on big jumps */
+function setW(m, v, type){
   const num = parseFloat(v);
-  if (Number.isNaN(num)) return; // prevent erase
+  if (Number.isNaN(num)) return;
 
   const rounded = Math.round((num + Number.EPSILON) * 10) / 10;
-  userWeights[m] = Math.max(0, rounded);
+  const final = Math.max(0, rounded);
+
+  const prev = userWeights[m]?.[type] ?? 0;
+
+  userWeights[m] = userWeights[m] || {};
+  userWeights[m][type] = final;
   saveWeights();
+
+  if (prev > 0 && final > prev + 5) {
+    const diff = final - prev;
+    showToast(`Warning: This is ${diff} lbs heavier than your last successful ${type} session.`, 4000);
+  }
+
   render();
-};
+}
+
 const topHit = (t, sets) => sets.every(r => r >= RULES[t].top);
+
+/* progression earned per machine + type, last 3 sessions of that type */
 const earned = (m,t) => {
-  const entries = history[m] || [];
+  const entries = (history[m] || []).filter(e => e.type === t);
   if(entries.length < 3) return false;
   const last3 = entries.slice(0,3);
   return last3.every(e => e.sets.length === RULES[t].sets && topHit(t, e.sets));
 };
 
+/* helper to capture current reps before re-render */
+function getCurrentReps(id, sets){
+  const reps = [];
+  for(let i=0;i<sets;i++){
+    const input = document.getElementById(`${safeId(id)}-${i}`);
+    reps.push(input ? (+input.value || 0) : 0);
+  }
+  return reps;
+}
+
 /* ===== TOAST ===== */
-function showToast(msg, ms=1400){
+/* center-screen, light background, dark text, default 4s */
+function showToast(msg, ms=4000){
   let t = document.querySelector('.toast');
   if(!t){
     t = document.createElement('div');
     t.className = 'toast';
+    t.style.position = 'fixed';
+    t.style.top = '50%';
+    t.style.left = '50%';
+    t.style.transform = 'translate(-50%, -50%)';
+    t.style.background = '#fdfdfd';
+    t.style.color = '#222';
+    t.style.padding = '10px 16px';
+    t.style.borderRadius = '8px';
+    t.style.boxShadow = '0 4px 12px rgba(0,0,0,0.2)';
+    t.style.zIndex = '9999';
+    t.style.fontSize = '14px';
+    t.style.maxWidth = '80%';
+    t.style.textAlign = 'center';
+    t.style.opacity = '0';
+    t.style.transition = 'opacity 0.2s ease';
     document.body.appendChild(t);
   }
   t.textContent = msg;
+  t.style.opacity = '1';
   t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'), ms);
+  setTimeout(()=>{
+    t.style.opacity = '0';
+    t.classList.remove('show');
+  }, ms);
 }
 
 /* ===== RENDER HELPERS ===== */
@@ -135,10 +184,12 @@ function renderExercise(x){
   const r = RULES[x.t] || {sets:0,reps:'',tempo:'',step:0};
   const id = x.m?.id || 'UNKNOWN';
   const sid = safeId(id);
-  const wt = userWeights[id] || 0;
+  const wt = w(id, x.t);
   const last = history[id]?.[0];
   const lastText = last ? `Last: ${last.w} · ${last.sets.join('/')}` : 'No history';
-  const readyBtn = (id !== 'UNKNOWN' && earned(id,x.t)) ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">Ready to increase +${r.step}</button>` : '';
+  const readyBtn = (id !== 'UNKNOWN' && earned(id,x.t))
+    ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">Ready to increase +${r.step}</button>`
+    : '';
   return `
     <div class="exercise ${x.t?.toLowerCase() || ''}">
       <div class="exercise-header">
@@ -147,25 +198,19 @@ function renderExercise(x){
           <strong>${x.m?.label ?? 'Unknown machine'}</strong>
           <div class="muscle">${x.g ?? ''} • ${x.t ?? ''}</div>
         </div>
-      <div class="weight">
-  <button onclick="setW('${id}', ${wt - r.step})">−</button>
-
-  <input
-    type="number"
-    min="0"
-    step="${r.step}"
-    value="${wt}"
-    onblur="setW('${id}', Number(this.value))"
-    onkeydown="if(event.key==='Enter'){ this.blur(); }"
-    style="
-      width:70px;
-      text-align:center;
-      font-weight:600;
-    "
-  /> lb
-
-  <button onclick="setW('${id}', ${wt + r.step})">+</button>
-</div>
+        <div class="weight">
+          <button onclick="setW('${id}', ${wt - r.step}, '${x.t}')">−</button>
+          <input
+            type="number"
+            min="0"
+            step="${r.step}"
+            value="${wt}"
+            onblur="setW('${id}', Number(this.value), '${x.t}')"
+            onkeydown="if(event.key==='Enter'){ this.blur(); }"
+            style="width:70px;text-align:center;font-weight:600;"
+          /> lb
+          <button onclick="setW('${id}', ${wt + r.step}, '${x.t}')">+</button>
+        </div>
       </div>
       <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
       <p>${lastText}</p>
@@ -190,7 +235,27 @@ function renderDayView(){
     workout.innerHTML = `<section class="workout-container"><p>No day "${selectedDay}" in current plan.</p></section>`;
     return;
   }
+
+  /* preserve reps before re-render */
+  const savedReps = {};
+  d.ex.forEach(ex=>{
+    const sets = RULES[ex.t]?.sets || 0;
+    savedReps[ex.m.id] = getCurrentReps(ex.m.id, sets);
+  });
+
   workout.innerHTML = `<h1>${selectedDay} — ${d.title}</h1>${d.ex.map(x=>renderExercise(x)).join('')}`;
+
+  /* restore reps after re-render */
+  d.ex.forEach(ex=>{
+    const sets = RULES[ex.t]?.sets || 0;
+    const reps = savedReps[ex.m.id] || [];
+    for(let i=0;i<sets;i++){
+      const input = document.getElementById(`${safeId(ex.m.id)}-${i}`);
+      if(input && reps[i] != null){
+        input.value = reps[i] || '';
+      }
+    }
+  });
 }
 
 /* Cardio view */
@@ -215,6 +280,7 @@ function renderCardio(){
   if(el('cardio-elev')) el('cardio-elev').value = c.elev || '';
 }
 
+/* Cardio save */
 function saveCardioFromPanel(){
   const miles = + (el('cardio-miles')?.value || 0);
   const cal = + (el('cardio-cal')?.value || 0);
@@ -252,8 +318,8 @@ function weeklySummaryHTML(){
   let tot={HEAVY:[0,0],LIGHT:[0,0],CORE:[0,0]};
   Object.entries(history).forEach(([m,h])=>{
     h.slice(0,7).forEach(e=>{
-      const type = Object.values(rotationPlans[meta.weekIndex]).flatMap(d=>d.ex).find(x=>x.m.id===m)?.t;
-      if(!type) return;
+      const type = e.type;
+      if(!type || !RULES[type]) return;
       e.sets.forEach(r=>{
         tot[type][0]++;
         if(r >= RULES[type].top) tot[type][1]++;
@@ -295,7 +361,12 @@ function logEx(m,t){
     sets.push(+ (input?.value || 0));
   }
   history[m] = history[m] || [];
-  history[m].unshift({ d: Date.now(), w: w(m), sets });
+  history[m].unshift({
+    d: Date.now(),
+    w: w(m,t),
+    sets,
+    type: t
+  });
   history[m] = history[m].slice(0,50);
   saveHistory();
   showToast('Logged ✓');
@@ -303,14 +374,23 @@ function logEx(m,t){
 }
 
 /* ===== PROGRESSION ===== */
+/* last 3 sessions of that type must all hit top reps */
 function confirmIncrease(id,type){
-  const last3 = (history[id]||[]).slice(0,3).map(h=>h.sets.join('/')).join(' | ');
-  const step = RULES[type].step;
-  const ok = confirm(`Last 3 sessions: ${last3}\nIncrease weight by ${step}?`);
-  if(ok){
-    setW(id, (userWeights[id]||0) + step);
-    showToast('Weight increased ✓');
+  const entries = (history[id] || []).filter(e => e.type === type);
+  const last3 = entries.slice(0,3);
+  if(last3.length < 3){
+    showToast('Need 3 sessions at this type before increasing.');
+    return;
   }
+  const allTop = last3.every(e => e.sets.length === RULES[type].sets && topHit(type, e.sets));
+  if(!allTop){
+    showToast('Not all recent sets hit top reps yet.');
+    return;
+  }
+  const step = RULES[type].step;
+  const current = w(id,type);
+  setW(id, current + step, type);
+  showToast('Weight increased ✓');
 }
 
 /* ===== AUTO ROTATION ===== */
@@ -347,7 +427,6 @@ document.addEventListener('DOMContentLoaded', ()=>{
   workout = el('workout');
   dayButtons = Array.from(document.querySelectorAll('.day-btn'));
 
-  // attach fallback listeners in case inline onclicks are not used
   const bCardio = el('btn-cardio');
   const bTrends = el('btn-trends');
   const bSummary = el('btn-summary');
@@ -355,10 +434,9 @@ document.addEventListener('DOMContentLoaded', ()=>{
   if(bTrends) bTrends.onclick = ()=>renderTrends();
   if(bSummary) bSummary.onclick = ()=>renderWeeklySummary();
 
-  // set active day button
   dayButtons.forEach(b=>b.classList.toggle('active', b.dataset.day === selectedDay));
 
   checkAutoRotate(4);
   render();
-  
 });
+
