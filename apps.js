@@ -1,5 +1,5 @@
 /****************************
- * MATRIX TRAINING PLUS
+ * MATRIX TRAINING PLU
  * apps.js (separate file)
  ****************************/
 
