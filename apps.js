@@ -290,30 +290,33 @@ function renderWeeklySummary(){
 
 /* ===== LOGGING ===== */
 function logEx(m,t){
-  const r = RULES[t];
-  const sets=[];
-  for(let i=0;i<r.sets;i++){
-    const input = document.getElementById(`${safeId(m)}-${i}`);
-    sets.push(+ (input?.value || 0));
+  const sets = (liveSets[m] || []).map(s => ({
+    w: s.w,
+    r: s.r
+  }));
+
+  if(!sets.length){
+    showToast('Enter at least one set');
+    return;
   }
+
   history[m] = history[m] || [];
-  history[m].unshift({ d: Date.now(), w: w(m), sets });
+  history[m].unshift({
+    d: Date.now(),
+    sets
+  });
   history[m] = history[m].slice(0,50);
   saveHistory();
-  showToast('Logged ✓');
+
+  // update base weight to last working set
+  userWeights[m] = sets[sets.length-1].w;
+  saveWeights();
+
+  liveSets[m] = []; // clear for next time
+  showToast('Workout logged ✓');
   render();
 }
 
-/* ===== PROGRESSION ===== */
-function confirmIncrease(id,type){
-  const last3 = (history[id]||[]).slice(0,3).map(h=>h.sets.join('/')).join(' | ');
-  const step = RULES[type].step;
-  const ok = confirm(`Last 3 sessions: ${last3}\nIncrease weight by ${step}?`);
-  if(ok){
-    setW(id, (userWeights[id]||0) + step);
-    showToast('Weight increased ✓');
-  }
-}
 
 /* ===== AUTO ROTATION ===== */
 function checkAutoRotate(weeksToRotate = 4){
