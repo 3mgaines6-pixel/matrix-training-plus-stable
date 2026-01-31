@@ -437,3 +437,73 @@ function checkAutoRotate(weeksToRotate = 4){
   }
 }
 
+/* ===== ROUTER ===== */
+function selectDay(d){
+  selectedDay = d;
+  currentView = 'workout';
+  if (Array.isArray(dayButtons)) {
+    dayButtons.forEach(b =>
+      b.classList.toggle('active', b.dataset.day === d)
+    );
+  }
+  render();
+}
+
+function render(){
+  if(!workout){
+    console.error('MATRIX DEBUG: #workout element not found.');
+    return;
+  }
+
+  switch(currentView){
+    case 'cardio':
+      renderCardio();
+      break;
+    case 'trends':
+      renderTrends();
+      break;
+    case 'summary':
+      renderWeeklySummary();
+      break;
+    default:
+      renderDayView();
+  }
+}
+
+/* ===== INIT ===== */
+let workout, dayButtons;
+document.addEventListener('DOMContentLoaded', ()=>{
+  console.log('APPS.JS LOADED');
+
+  workout = el('workout');
+  dayButtons = Array.from(document.querySelectorAll('.day-btn'));
+
+  dayButtons.forEach(btn => {
+    btn.onclick = () => {
+      const day = btn.dataset.day;
+      selectDay(day);
+    };
+  });
+
+  const bCardio = el('btn-cardio');
+  const bTrends = el('btn-trends');
+  const bSummary = el('btn-summary');
+
+  if(bCardio) bCardio.onclick = ()=>{
+    currentView = 'cardio';
+    render();
+  };
+
+  if(bTrends) bTrends.onclick = ()=>{
+    currentView = 'trends';
+    render();
+  };
+
+  if(bSummary) bSummary.onclick = ()=>{
+    currentView = 'summary';
+    render();
+  };
+
+  checkAutoRotate(4);
+  render();
+});
