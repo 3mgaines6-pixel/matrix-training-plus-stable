@@ -364,6 +364,13 @@ function renderWeeklySummary(){
 }
 
 /* ===== LOGGING ===== */
+/* ===== LIVE SET HANDLER (Option A) ===== */
+function updateLiveSet(machine, index, field, value){
+  liveSets[machine] = liveSets[machine] || [];
+  liveSets[machine][index] = liveSets[machine][index] || { w: 0, r: 0 };
+  liveSets[machine][index][field] = Number(value) || 0;
+}
+
 function logEx(m, t){
   const sets = (liveSets[m] || [])
     .filter(s => s && s.w > 0 && s.r > 0)
