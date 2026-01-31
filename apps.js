@@ -170,11 +170,23 @@ function renderExercise(x){
 }
 
 function renderDayView(){
-  const day = rotationPlans[0][selectedDay];
-  const workout = el("workout");
-  workout.innerHTML =
-    `<h2>${selectedDay} — ${day.title}</h2>` +
-    day.ex.map(renderExercise).join("");
+  const plan = rotationPlans[meta.weekIndex] || rotationPlans[0];
+  if(!plan){
+    workout.innerHTML = '<p>No workout plan</p>';
+    return;
+  }
+
+  const d = plan[selectedDay];
+  if(!d){
+    workout.innerHTML = `<p>No data for ${selectedDay}</p>`;
+    return;
+  }
+
+  let html = `<h1>${selectedDay} — ${d.title}</h1>`;
+  html += renderDayRules(d);
+  html += d.ex.map(renderExercise).join('');
+
+  workout.innerHTML = html;
 }
 
 function renderCardio(){
@@ -202,11 +214,19 @@ function render(){
     return;
   }
 
-  workout.innerHTML = `
-    <h2 style="color:lime">RENDER OK</h2>
-    <p>View: ${currentView}</p>
-    <p>Day: ${selectedDay}</p>
-  `;
+  switch(currentView){
+    case 'cardio':
+      renderCardio();
+      break;
+    case 'trends':
+      renderTrends();
+      break;
+    case 'summary':
+      renderWeeklySummary();
+      break;
+    default:
+      renderDayView();
+  }
 }
 
 /* ===== INIT ===== */
