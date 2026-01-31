@@ -170,15 +170,31 @@ function renderExercise(x){
 </div>
       </div>
       <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
-      <p>${lastText}</p>
-      ${Array.from({length:r.sets}).map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`).join('<br>')}
-      <div style="margin-top:8px">
-        <button onclick="logEx('${id}','${x.t}')">Log</button>
-        ${readyBtn}
-      </div>
-    </div>
-  `;
-}
+      <p>${lastText}</p>${Array.from({ length: r.sets }).map((_, i) => `
+  <div class="set-row">
+    Set ${i + 1}:
+    <input
+      type="number"
+      placeholder="lb"
+      style="width:60px"
+      oninput="
+        liveSets['${id}'] = liveSets['${id}'] || [];
+        liveSets['${id}'][${i}] = liveSets['${id}'][${i}] || {};
+        liveSets['${id}'][${i}].w = Number(this.value);
+      "
+    >
+    <input
+      type="number"
+      placeholder="reps"
+      style="width:60px"
+      oninput="
+        liveSets['${id}'] = liveSets['${id}'] || [];
+        liveSets['${id}'][${i}] = liveSets['${id}'][${i}] || {};
+        liveSets['${id}'][${i}].r = Number(this.value);
+      "
+    >
+  </div>
+`).join('')}
 
 /* ===== VIEWS ===== */
 function renderDayView(){
