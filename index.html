@@ -8,7 +8,7 @@
  <link rel="stylesheet" href="styles.css?v=20260125-1">
 
 </head>
-   <script src="./apps.js"></script>
+
 <body>
   <header class="app-header">
     <h1>Matrix Training Plus</h1>
@@ -35,15 +35,19 @@
 
 
 
+<script src="./apps.js"></script>
 <script>
   (function(){
     const v = 'v20260125-1';
     const b = document.createElement('div');
-    b.style.cssText = 'position:fixed;left:8px;top:72px;background:rgba(0,0,0,.6);color:#fff;padding:6px;border-radius:8px;z-index:9999;font-size:12px';
+    b.style.cssText =
+      'position:fixed;left:8px;top:72px;background:rgba(0,0,0,.6);color:#fff;' +
+      'padding:6px;border-radius:8px;z-index:9999;font-size:12px';
     b.textContent = 'Build: ' + v;
     document.body.appendChild(b);
   })();
 </script>
+
 
 </body>
 </html>
