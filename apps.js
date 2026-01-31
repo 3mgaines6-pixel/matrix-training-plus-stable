@@ -2,6 +2,7 @@
  * MATRIX TRAINING PLU
  * apps.js (separate file)
  ****************************/
+let currentView = 'workout'; // workout | cardio | trends | summary
 
 /* ===== STORAGE KEYS ===== */
 const HISTORY_KEY = "mtp-history-v1";
@@ -437,7 +438,10 @@ function checkAutoRotate(weeksToRotate = 4){
 /* ===== ROUTER ===== */
 function selectDay(d){
   selectedDay = d;
-  if(Array.isArray(dayButtons)) dayButtons.forEach(b=>b.classList.toggle('active', b.dataset.day === d));
+  currentView = 'workout';
+  dayButtons.forEach(b =>
+    b.classList.toggle('active', b.dataset.day === d)
+  );
   render();
 }
 
@@ -446,8 +450,23 @@ function render(){
     console.error('MATRIX DEBUG: #workout element not found.');
     return;
   }
-  renderDayView();
+
+  switch(currentView){
+    case 'cardio':
+      renderCardio();
+      break;
+    case 'trends':
+      renderTrends();
+      break;
+    case 'summary':
+      renderWeeklySummary();
+      break;
+    default:
+      renderDayView();
+  }
 }
+
+
 
 /* ===== INIT ===== */
 let workout, dayButtons;
@@ -459,9 +478,21 @@ document.addEventListener('DOMContentLoaded', ()=>{
   const bCardio = el('btn-cardio');
   const bTrends = el('btn-trends');
   const bSummary = el('btn-summary');
-  if(bCardio) bCardio.onclick = ()=>renderCardio();
-  if(bTrends) bTrends.onclick = ()=>renderTrends();
-  if(bSummary) bSummary.onclick = ()=>renderWeeklySummary();
+  if(bCardio) bCardio.onclick = ()=>{
+  currentView = 'cardio';
+  render();
+};
+
+if(bTrends) bTrends.onclick = ()=>{
+  currentView = 'trends';
+  render();
+};
+
+if(bSummary) bSummary.onclick = ()=>{
+  currentView = 'summary';
+  render();
+};
+
 
   // set active day button
   dayButtons.forEach(b=>b.classList.toggle('active', b.dataset.day === selectedDay));
