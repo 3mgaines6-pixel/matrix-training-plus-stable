@@ -446,6 +446,28 @@ function selectDay(d){
 }
 
 function render(){
+  console.log('VIEW:', currentView, 'DAY:', selectedDay); // 👈 paste THIS line
+
+  if(!workout){
+    console.error('MATRIX DEBUG: #workout element not found.');
+    return;
+  }
+
+  switch(currentView){
+    case 'cardio':
+      renderCardio();
+      break;
+    case 'trends':
+      renderTrends();
+      break;
+    case 'summary':
+      renderWeeklySummary();
+      break;
+    default:
+      renderDayView();
+  }
+}
+
   if(!workout){
     console.error('MATRIX DEBUG: #workout element not found.');
     return;
