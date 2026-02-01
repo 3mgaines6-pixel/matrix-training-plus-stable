@@ -1,3 +1,5 @@
+// updated 2026-02-01
+
 /****************************
  * MATRIX TRAINING PLUS
  * apps.js (updated)
