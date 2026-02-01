@@ -202,6 +202,21 @@ function handleSetInput(m, t, index, value) {
   // capture current selected weight for this set
   currentSetWeights[m][index] = w(m, t);
 }
+/* ===== PROGRESSION CHECK ===== */
+function earned(m, t) {
+  const r = RULES[t];
+  const h = (history[m] || []).filter(e => e.type === t);
+
+  // need 3 sessions of this type
+  if (h.length < 3) return false;
+
+  // all 3 must hit top reps on all sets
+  return h.slice(0, 3).every(e =>
+    Array.isArray(e.sets) &&
+    e.sets.length === r.sets &&
+    e.sets.every(x => Number(x) >= r.reps)
+  );
+}
 
 function renderExercise(x){
   const r = RULES[x.t] || {sets:0,reps:'',tempo:'',step:0};
