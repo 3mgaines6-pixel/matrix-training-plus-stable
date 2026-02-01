@@ -300,17 +300,78 @@ function weeklySummaryHTML() {
 
   return html;
 }
+/* ===== ROUTER ===== */
+
+// currently selected day
+let selectedDay = "Monday";
+
+// collect the day buttons after DOM loads
+let dayButtons = [];
+
+// called when user clicks a day button
+function selectDay(d) {
+  selectedDay = d;
+
+  if (Array.isArray(dayButtons)) {
+    dayButtons.forEach(btn => {
+      btn.classList.toggle("active", btn.dataset.day === d);
+    });
+  }
+
+  render();
+}
+
+// main render function
+function render() {
+  if (!workout) {
+    console.error("MATRIX DEBUG: #workout element not found.");
+    return;
+  }
+  renderDayView();
+}
+
+// renders the workout for the selected day
+function renderDayView() {
+  const el = document.getElementById("workout");
+  if (!el) return;
+
+  // You must define your weekly workout plan here.
+  // Example structure:
+  const weeklyPlan = {
+    Monday:   ["Chest Press", "Row", "Leg Press"],
+    Tuesday:  ["Lat Pulldown", "Shoulder Press"],
+    Wednesday:["Leg Curl", "Leg Extension"],
+    Thursday: ["Chest Press", "Row"],
+    Friday:   ["Core", "Back Extension"]
+  };
+
+  const machines = weeklyPlan[selectedDay] || [];
+
+  el.innerHTML = `
+    <h3>${selectedDay}</h3>
+    <ul>
+      ${machines.map(m => `<li onclick="selectMachine('${m}')">${m}</li>`).join("")}
+    </ul>
+  `;
+}
 
 // -----------------------------
 // Initialization
 // -----------------------------
 
 function initApp() {
+  // collect day buttons
+  dayButtons = Array.from(document.querySelectorAll(".day-btn"));
+
+  // highlight the default selected day
+  selectDay(selectedDay);
+
   updateTypeUI();
   renderCurrentSets();
   renderLastForMachine();
   weeklySummaryHTML();
 }
+
 
 
 
