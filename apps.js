@@ -97,6 +97,9 @@ if (Array.isArray(rotationPlans) && rotationPlans.length > 0) {
 }
 
 /* ===== STATE ===== */
+// temp per-set weights while entering reps
+const currentSetWeights = {};
+
 let selectedDay = "Monday";
 
 /* ===== HELPERS ===== */
@@ -182,13 +185,42 @@ function showToast(msg, ms=4000){
 }
 
 /* ===== RENDER HELPERS ===== */
+function handleSetInput(m, t, index, value) {
+  const reps = Number(value);
+  const setsCount = RULES[t]?.sets || 0;
+
+  if (!currentSetWeights[m]) {
+    currentSetWeights[m] = Array(setsCount).fill(null);
+  }
+
+  if (!Number.isFinite(reps) || reps <= 0) {
+    // clear weight for this set if reps are cleared/invalid
+    currentSetWeights[m][index] = null;
+    return;
+  }
+
+  // capture current selected weight for this set
+  currentSetWeights[m][index] = w(m, t);
+}
+
 function renderExercise(x){
   const r = RULES[x.t] || {sets:0,reps:'',tempo:'',step:0};
   const id = x.m?.id || 'UNKNOWN';
   const sid = safeId(id);
   const wt = w(id, x.t);
   const last = history[id]?.[0];
-  const lastText = last ? `Last: ${last.w} · ${last.sets.join('/')}` : 'No history';
+ let lastText = 'No history';
+
+if (last) {
+  if (Array.isArray(last.weights) && last.weights.some(w => w != null)) {
+    const wStr = last.weights.map(w => w ?? '-').join('/');
+    const rStr = last.sets.join('/');
+    lastText = `Last: ${wStr} · ${rStr}`;
+  } else {
+    lastText = `Last: ${last.w} · ${last.sets.join('/')}`;
+  }
+}
+
   const readyBtn = (id !== 'UNKNOWN' && earned(id,x.t))
     ? `<button class="ready-btn" onclick="confirmIncrease('${id}','${x.t}')">Ready to increase +${r.step}</button>`
     : '';
@@ -216,7 +248,17 @@ function renderExercise(x){
       </div>
       <p>${r.sets} × ${r.reps} · Tempo ${r.tempo}</p>
       <p>${lastText}</p>
-      ${Array.from({length:r.sets}).map((_,i)=>`Set ${i+1}: <input id="${sid}-${i}" type="number" min="0" step="1">`).join('<br>')}
+     ${Array.from({length:r.sets}).map((_,i)=>`
+  Set ${i+1}: 
+  <input 
+    id="${sid}-${i}" 
+    type="number" 
+    min="0" 
+    step="1"
+    oninput="handleSetInput('${id}','${x.t}',${i}, this.value)"
+  >
+`).join('<br>')}
+
       <div style="margin-top:8px">
         <button onclick="logEx('${id}','${x.t}')">Log</button>
         ${readyBtn}
@@ -355,25 +397,47 @@ function renderWeeklySummary(){
 }
 
 /* ===== LOGGING ===== */
-function logEx(m,t){
+function logEx(m, t) {
   const r = RULES[t];
-  const sets=[];
-  for(let i=0;i<r.sets;i++){
+  const sets = [];
+
+  // collect reps from inputs
+  for (let i = 0; i < r.sets; i++) {
     const input = document.getElementById(`${safeId(m)}-${i}`);
-    sets.push(+ (input?.value || 0));
+    sets.push(Number(input?.value || 0));
   }
+
+  // build per-set weights
+  const baseW = w(m, t);
+  const temp = currentSetWeights[m] || [];
+  const weights = sets.map((reps, i) => {
+    const cw = temp[i];
+    return reps > 0
+      ? (cw != null ? cw : baseW)
+      : null;
+  });
+
+  // write history entry
   history[m] = history[m] || [];
   history[m].unshift({
     d: Date.now(),
-    w: w(m,t),
-    sets,
+    w: baseW,     // keep old field for compatibility
+    sets,         // reps
+    weights,      // NEW per-set weights
     type: t
   });
-  history[m] = history[m].slice(0,50);
+
+  // keep history trimmed
+  history[m] = history[m].slice(0, 50);
+
+  // clear temp weights for this machine
+  delete currentSetWeights[m];
+
   saveHistory();
   showToast('Logged ✓');
   render();
 }
+
 
 /* ===== PROGRESSION ===== */
 /* last 3 sessions of that type must all hit top reps */
