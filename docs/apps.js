@@ -231,6 +231,23 @@ let drawerType = null;
 let tempoOpen = false;
 let restTimerId = null;
 let restSeconds = 0;
+function getSuggestedWeight(machineNumber, type) {
+  const history = loadHistory(machineNumber, type);
+  if (!history.length) return null;
+
+  const lastSession = history[history.length - 1];
+  const lastSet = lastSession.sets[lastSession.sets.length - 1];
+  const lastWeight = lastSet.weight;
+  const lastReps = lastSet.reps;
+
+  const rule = RULES[type];
+
+  if (lastReps >= rule.top) {
+    return lastWeight + rule.increment;
+  }
+
+  return lastWeight;
+}
 
 /* ------------------------------------------------------------
    OPEN DRAWER
