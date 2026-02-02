@@ -223,16 +223,6 @@ function renderBottomNav() {
   // This function is here for future V2 expansion.
 }
 /* ============================================================
-   SECTION 3 — DRAWER SYSTEM
-   ============================================================ */
-
-let drawerMachine = null;
-let drawerType = null;
-let tempoOpen = false;
-let restTimerId = null;
-let restSeconds = 0;
-
-/* ============================================================
    SECTION 3 — DRAWER SYSTEM (CORRECTED)
    ============================================================ */
 
@@ -378,6 +368,17 @@ function logExercise() {
   render(); // refresh list + weekly summary
 }
 
+/* ------------------------------------------------------------
+   ATTACH EVENT LISTENERS INSIDE initApp()
+   ------------------------------------------------------------ */
+
+function attachDrawerListeners() {
+  document.getElementById("overlay").addEventListener("click", closeDrawer);
+  document.getElementById("close-drawer").addEventListener("click", closeDrawer);
+  document.getElementById("tempo-toggle").addEventListener("click", toggleTempo);
+  document.getElementById("start-timer").addEventListener("click", startRestTimer);
+  document.getElementById("log-button").addEventListener("click", logExercise);
+}
 
 /* ============================================================
    SECTION 4 — WEEKLY SUMMARY + INIT
