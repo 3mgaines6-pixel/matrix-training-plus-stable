@@ -232,6 +232,16 @@ let tempoOpen = false;
 let restTimerId = null;
 let restSeconds = 0;
 
+/* ============================================================
+   SECTION 3 — DRAWER SYSTEM (CORRECTED)
+   ============================================================ */
+
+let drawerMachine = null;
+let drawerType = null;
+let tempoOpen = false;
+let restTimerId = null;
+let restSeconds = 0;
+
 /* ------------------------------------------------------------
    OPEN DRAWER
    ------------------------------------------------------------ */
@@ -291,51 +301,24 @@ function closeDrawer() {
   drawerType = null;
 }
 
-/* Overlay click closes drawer */
-document.getElementById("overlay").addEventListener("click", closeDrawer);
-document.getElementById("close-drawer").addEventListener("click", closeDrawer);
-
 /* ------------------------------------------------------------
    TEMPO TOGGLE
    ------------------------------------------------------------ */
 
-document.getElementById("tempo-toggle").addEventListener("click", () => {
+function toggleTempo() {
   tempoOpen = !tempoOpen;
 
   document.getElementById("tempo-label").textContent =
     tempoOpen ? "Tempo ▾" : "Tempo ▸";
 
   document.getElementById("tempo-value").classList.toggle("hidden");
-});
-
-/* ------------------------------------------------------------
-   SUGGESTED WEIGHT LOGIC
-   ------------------------------------------------------------ */
-
-function getSuggestedWeight(machineNumber, type) {
-  const last = getLastSession(machineNumber, type);
-  if (!last) return null;
-
-  const rule = RULES[type];
-  const lastMax = Math.max(...last.sets.map(s => s.weight));
-
-  // If CORE, no progression
-  if (type === "CORE") return lastMax;
-
-  // If earned progression (3 sessions at top reps)
-  if (earnedProgression(machineNumber, type)) {
-    return lastMax + rule.increment;
-  }
-
-  // Otherwise return same weight
-  return lastMax;
 }
 
 /* ------------------------------------------------------------
    REST TIMER
    ------------------------------------------------------------ */
 
-document.getElementById("start-timer").addEventListener("click", () => {
+function startRestTimer() {
   if (restTimerId) clearInterval(restTimerId);
 
   restSeconds = 90;
@@ -350,7 +333,7 @@ document.getElementById("start-timer").addEventListener("click", () => {
       restTimerId = null;
     }
   }, 1000);
-});
+}
 
 function updateTimerDisplay() {
   const m = String(Math.floor(restSeconds / 60)).padStart(2, "0");
@@ -362,7 +345,7 @@ function updateTimerDisplay() {
    LOGGING THE EXERCISE
    ------------------------------------------------------------ */
 
-document.getElementById("log-button").addEventListener("click", () => {
+function logExercise() {
   if (!drawerMachine || !drawerType) return;
 
   const repsInputs = Array.from(document.querySelectorAll(".reps-input"));
@@ -393,7 +376,9 @@ document.getElementById("log-button").addEventListener("click", () => {
 
   closeDrawer();
   render(); // refresh list + weekly summary
-});
+}
+
+
 /* ============================================================
    SECTION 4 — WEEKLY SUMMARY + INIT
    ============================================================ */
@@ -456,6 +441,9 @@ function renderWeeklySummary() {
 function initApp() {
   render();
   renderWeeklySummary();
+
+  // Attach drawer event listeners AFTER DOM is ready
+  attachDrawerListeners();
 
   // Ensure drawer starts closed
   document.getElementById("drawer").classList.remove("open");
