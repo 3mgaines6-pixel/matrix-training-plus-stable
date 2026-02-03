@@ -18,6 +18,20 @@ body {
 /* ===========================
    DAY HEADER
    =========================== */
+.day-selector { display:flex; gap:8px; margin:12px 0; }
+.day-button {
+  padding:6px 10px;
+  cursor:pointer;
+  border-radius:6px;
+  border:1px solid #d0d7de;
+  background:#ffffff;
+  color:#111827;
+}
+.day-button.active {
+  background:#0b5fff;
+  color:#ffffff;
+  border-color:#0b5fff;
+}
 
 #day-header {
   padding: 16px;
