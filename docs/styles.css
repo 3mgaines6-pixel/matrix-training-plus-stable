@@ -13,12 +13,15 @@ body {
   background: #f7f7f7;
   color: #222;
   overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 /* ===========================
-   DAY HEADER
+   DAY HEADER AND SELECTOR
    =========================== */
-.day-selector { display:flex; gap:8px; margin:12px 0; }
+
+.day-selector { display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; }
 .day-button {
   padding:6px 10px;
   cursor:pointer;
@@ -26,22 +29,31 @@ body {
   border:1px solid #d0d7de;
   background:#ffffff;
   color:#111827;
+  font-weight:600;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
+.day-button:hover { transform: translateY(-1px); }
+.day-button:active { transform: translateY(0); }
+.day-button:focus { outline: 3px solid rgba(11,95,255,0.18); outline-offset: 2px; }
 .day-button.active {
   background:#0b5fff;
   color:#ffffff;
-  border-color:#0b5fff;
+  border-color:#0846d1;
 }
+
+/* ===========================
+   DAY HEADER
+   =========================== */
 
 #day-header {
   padding: 16px;
   background: #fff;
-  border-bottom: 1px solid #ddd;
+  border-bottom: 1px solid #e6e6e6;
 }
-
 #day-title {
   font-size: 20px;
-  font-weight: 600;
+  font-weight: 700;
+  color: #0f1720;
 }
 
 /* ===========================
@@ -58,25 +70,13 @@ body {
   padding: 14px 16px;
   margin-bottom: 10px;
   background: #fff;
-  border: 1px solid #ddd;
-  border-radius: 6px;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
+  display:block;
 }
-
 .exercise-row:hover {
-  background: #f0f0f0;
-}
-
-.ex-title {
-  font-size: 17px;
-  font-weight: 600;
-}
-
-.ex-sub {
-  font-size: 14px;
-  color: #666;
-  margin-top: 4px;
-}
-
-/* =================
+  background: #fbfbfb;
+  transform: translateY(-2px);
+  box-shadow:
