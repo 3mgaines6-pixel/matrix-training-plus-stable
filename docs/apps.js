@@ -81,7 +81,7 @@ const workouts = {
   }
 };
 
-const RULES = {
+ RULES = {
   HEAVY: { sets: 3, bottom: 6, top: 8, increment: 5 },
   LIGHT: { sets: 3, bottom: 10, top: 12, increment: 2.5 },
   CORE:  { sets: 3, bottom: 12, top: 15, increment: 0 }
@@ -92,13 +92,13 @@ function historyKey(machineNumber, type) {
 }
 
 function loadHistory(machineNumber, type) {
-  const key = historyKey(machineNumber, type);
+   key = historyKey(machineNumber, type);
   return JSON.parse(localStorage.getItem(key) || "[]");
 }
 
 function saveHistory(machineNumber, type, session) {
-  const key = historyKey(machineNumber, type);
-  const h = loadHistory(machineNumber, type);
+   key = historyKey(machineNumber, type);
+   h = loadHistory(machineNumber, type);
   h.push(session);
   localStorage.setItem(key, JSON.stringify(h));
 }
@@ -108,16 +108,16 @@ function formatSession(session) {
 }
 
 function getLastSession(machineNumber, type) {
-  const h = loadHistory(machineNumber, type);
+   h = loadHistory(machineNumber, type);
   return h.length ? h[h.length - 1] : null;
 }
 
 function earnedProgression(machineNumber, type) {
-  const h = loadHistory(machineNumber, type);
+   h = loadHistory(machineNumber, type);
   if (h.length < 3) return false;
 
-  const top = RULES[type].top;
-  const lastThree = h.slice(-3);
+   top = RULES[type].top;
+   lastThree = h.slice(-3);
 
   return lastThree.every(s => s.sets.every(set => set.reps >= top));
 }
@@ -137,8 +137,8 @@ function render() {
 }
 
 function renderDayHeader() {
-  const day = workouts[selectedDay];
-  const titleEl = document.getElementById("day-title");
+   day = workouts[selectedDay];
+   titleEl = document.getElementById("day-title");
 
   if (day && titleEl) {
     titleEl.textContent = `${selectedDay} — ${day.title}`;
@@ -152,10 +152,10 @@ function selectDay(day) {
 }
 
 function renderExerciseList() {
-  const container = document.getElementById("exercise-list");
+   container = document.getElementById("exercise-list");
   if (!container) return;
 
-  const day = workouts[selectedDay];
+   day = workouts[selectedDay];
   if (!day) {
     container.innerHTML = "<p>No workout found.</p>";
     return;
@@ -371,15 +371,6 @@ function closeDrawer() {
 }
 
 
-  // Attach day button handlers (defensive)
-  document.querySelectorAll(".day-button").forEach(btn => {
-    if (!btn.__dayAttached) {
-      btn.addEventListener("click", () => selectDay(btn.dataset.day || btn.textContent.trim()));
-      btn.__dayAttached = true;
-    }
-  });
-}
-
 function attachDayButtons() {
   document.querySelectorAll(".day-button").forEach(btn => {
     if (!btn.__dayAttached) {
@@ -450,14 +441,38 @@ function initApp() {
   render();
   renderWeeklySummary();
 
-  attachDrawerListeners();
-  attachDayButtons();
+  function attachDrawerListeners() {
+  if (attachDrawerListeners._attached) return;
+  attachDrawerListeners._attached = true;
 
-  // Ensure drawer starts closed
-  const drawer = document.getElementById("drawer");
-  const overlay = document.getElementById("overlay");
-  if (drawer) drawer.classList.remove("open");
-  if (overlay) overlay.classList.remove("visible");
+  document.addEventListener("click", function (e) {
+    const target = e.target;
+
+    if (target.closest && target.closest("#close-drawer")) {
+      closeDrawer();
+      return;
+    }
+
+    if (target.closest && target.closest("#overlay")) {
+      closeDrawer();
+      return;
+    }
+
+    if (target.closest && target.closest("#tempo-toggle")) {
+      toggleTempo();
+      return;
+    }
+
+    if (target.closest && target.closest("#start-timer")) {
+      startRestTimer();
+      return;
+    }
+
+    if (target.closest && target.closest("#log-button")) {
+      logExercise();
+      return;
+    }
+  });
+
+  console.log("Drawer delegation listeners attached");
 }
-
-document.addEventListener("DOMContentLoaded", initApp);
