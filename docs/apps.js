@@ -434,14 +434,8 @@ function renderWeeklySummary() {
   `;
 }
 
-function initApp() {
-  // restore selectedDay if present
-  selectedDay = localStorage.getItem("selectedDay") || selectedDay;
-
-  render();
-  renderWeeklySummary();
-
-  function attachDrawerListeners() {
+// Delegated drawer listeners (top-level)
+function attachDrawerListeners() {
   if (attachDrawerListeners._attached) return;
   attachDrawerListeners._attached = true;
 
@@ -476,3 +470,24 @@ function initApp() {
 
   console.log("Drawer delegation listeners attached");
 }
+
+// App init (top-level)
+function initApp() {
+  // restore selectedDay if present
+  selectedDay = localStorage.getItem("selectedDay") || selectedDay;
+
+  // Attach listeners and UI wiring
+  attachDrawerListeners();
+  attachDayButtons();
+
+  // Ensure drawer starts closed
+  const drawer = document.getElementById("drawer");
+  const overlay = document.getElementById("overlay");
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("visible");
+
+  render();
+  renderWeeklySummary();
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
