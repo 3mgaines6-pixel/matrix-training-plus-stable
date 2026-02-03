@@ -1,127 +1,125 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Matrix Training Plus</title>
-  <link rel="stylesheet" href="styles.css">
 
+  <!-- Favicon (add a favicon.ico to the same folder) -->
+  <link rel="icon" href="favicon.ico" sizes="32x32">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles.css" />
 </head>
 
 <body>
-
   <div id="app">
 
-<!--  Day Header -->
-<header id="day-header">
-  <!-- Day selector -->
-<div id="day-selector" class="day-selector">
-  <button class="day-button" data-day="Monday">Monday</button>
-  <button class="day-button" data-day="Tuesday">Tuesday</button>
-  <button class="day-button" data-day="Wednesday">Wednesday</button>
-  <button class="day-button" data-day="Thursday">Thursday</button>
-  <button class="day-button" data-day="Friday">Friday</button>
-</div>
-
-  <h1 id="day-title">Tuesday — UPPER — HEAVY + LIGHT</h1>
-</header>
-
-<!-- Exercise List -->
-<div id="exercise-list">
-  <!-- Example exercise row -->
-  <button class="exercise-row" data-machine="7">
-    <div class="ex-title">#7 CHEST PRESS</div>
-    <div class="ex-sub">Chest • HEAVY • 3×6–8</div>
-  </button>
-
-  <button class="exercise-row" data-machine="8">
-    <div class="ex-title">#8 LAT PULLDOWN</div>
-    <div class="ex-sub">Back • HEAVY • 3×6–8</div>
-  </button>
-
-  <!-- JS will generate the rest -->
-</div>
-
-<!-- Dim Background Overlay -->
-<div id="overlay"></div>
-
-<!-- Slide-Up Drawer -->
-<div id="drawer">
-
-  <!-- Grab Handle -->
-  <div id="drawer-handle"></div>
-
-  <!-- Drawer Content -->
-  <div id="drawer-content">
-
-    <!-- Machine Header -->
-    <div id="drawer-header">
-      <h2 id="drawer-machine-name">#7 CHEST PRESS</h2>
-      <div id="drawer-machine-meta">Chest • HEAVY • 3×6–8</div>
-    </div>
-
-    <!-- Tempo Toggle -->
-    <div id="tempo-toggle">
-      <span id="tempo-label">Tempo ▸</span>
-      <span id="tempo-value" class="hidden">3‑1‑2</span>
-    </div>
-
-    <!-- Last Session -->
-    <div id="last-session">
-      Last: <span id="last-session-value">70 • 8/8/7</span>
-    </div>
-
-    <!-- Suggested Weight -->
-    <div id="suggested-weight">
-      Suggested: <span id="suggested-weight-value">72.5 lb</span>
-    </div>
-
-    <!-- Set Inputs -->
-    <div id="set-inputs">
-      <div class="set-row">
-        <label>Set 1:</label>
-        <input class="reps-input" placeholder="Reps">
-        <input class="weight-input" placeholder="Weight">
+    <!-- Day Header -->
+    <header id="day-header">
+      <!-- Day selector -->
+      <div id="day-selector" class="day-selector">
+        <button class="day-button" data-day="Monday">Monday</button>
+        <button class="day-button" data-day="Tuesday">Tuesday</button>
+        <button class="day-button" data-day="Wednesday">Wednesday</button>
+        <button class="day-button" data-day="Thursday">Thursday</button>
+        <button class="day-button" data-day="Friday">Friday</button>
       </div>
 
-      <div class="set-row">
-        <label>Set 2:</label>
-        <input class="reps-input" placeholder="Reps">
-        <input class="weight-input" placeholder="Weight">
+      <h1 id="day-title">Tuesday — UPPER — HEAVY + LIGHT</h1>
+    </header>
+
+    <!-- Exercise List -->
+    <main id="exercise-list" aria-live="polite">
+      <!-- Example exercise rows (JS will render full list) -->
+      <button class="exercise-row" data-machine="7" data-type="HEAVY">
+        <div class="ex-title">#7 CHEST PRESS</div>
+        <div class="ex-sub">Chest • HEAVY • 3×6–8</div>
+      </button>
+
+      <button class="exercise-row" data-machine="8" data-type="HEAVY">
+        <div class="ex-title">#8 LAT PULLDOWN</div>
+        <div class="ex-sub">Back • HEAVY • 3×6–8</div>
+      </button>
+    </main>
+
+    <!-- Dim Background Overlay -->
+    <div id="overlay" aria-hidden="true"></div>
+
+    <!-- Slide-In Drawer -->
+    <aside id="drawer" role="dialog" aria-modal="true" aria-hidden="true">
+
+      <!-- Drawer Content -->
+      <div id="drawer-content">
+
+        <!-- Machine Header -->
+        <div id="drawer-header">
+          <h2 id="drawer-machine-name">#7 CHEST PRESS</h2>
+          <div id="drawer-machine-meta">Chest • HEAVY • 3×6–8</div>
+        </div>
+
+        <!-- Tempo Toggle -->
+        <div id="tempo-toggle" role="button" tabindex="0" aria-pressed="false">
+          <span id="tempo-label">Tempo ▸</span>
+          <span id="tempo-value" class="hidden">3‑1‑2</span>
+        </div>
+
+        <!-- Last Session -->
+        <div id="last-session" class="muted">
+          Last: <span id="last-session-value">70 • 8/8/7</span>
+        </div>
+
+        <!-- Suggested Weight -->
+        <div id="suggested-weight" class="muted">
+          Suggested: <span id="suggested-weight-value">72.5 lb</span>
+        </div>
+
+        <!-- Set Inputs -->
+        <div id="set-inputs">
+          <div class="set-row">
+            <label>Set 1:</label>
+            <input class="reps-input" placeholder="Reps" inputmode="numeric" />
+            <input class="weight-input" placeholder="Weight" inputmode="decimal" />
+          </div>
+
+          <div class="set-row">
+            <label>Set 2:</label>
+            <input class="reps-input" placeholder="Reps" inputmode="numeric" />
+            <input class="weight-input" placeholder="Weight" inputmode="decimal" />
+          </div>
+
+          <div class="set-row">
+            <label>Set 3:</label>
+            <input class="reps-input" placeholder="Reps" inputmode="numeric" />
+            <input class="weight-input" placeholder="Weight" inputmode="decimal" />
+          </div>
+        </div>
+
+        <!-- Rest Timer -->
+        <div id="rest-timer">
+          <button id="start-timer" type="button">Start Rest Timer</button>
+          <div id="timer-display">00:00</div>
+        </div>
+
+        <!-- Log and Close Buttons -->
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button id="log-button" type="button">Log Exercise</button>
+          <button id="close-drawer" type="button">Close</button>
+        </div>
+
       </div>
+    </aside>
 
-      <div class="set-row">
-        <label>Set 3:</label>
-        <input class="reps-input" placeholder="Reps">
-        <input class="weight-input" placeholder="Weight">
-      </div>
-    </div>
-
-    <!-- Rest Timer -->
-    <div id="rest-timer">
-      <button id="start-timer">Start Rest Timer</button>
-      <div id="timer-display">00:00</div>
-    </div>
-
-    <!-- Log Button -->
-    <button id="log-button">Log Exercise</button>
-
-    <!-- Close Drawer -->
-    <button id="close-drawer">Close</button>
-
-  </div>
-</div>
-
-<!-- Bottom Navigation -->
-<nav id="bottom-nav">
-  <button>Cardio</button>
-  <button>Trends</button>
-  <button>Weekly</button>
-</nav>
-
+    <!-- Bottom Navigation -->
+    <nav id="bottom-nav" aria-label="Main navigation" style="margin:16px;">
+      <button type="button">Cardio</button>
+      <button type="button">Trends</button>
+      <button type="button">Weekly</button>
+    </nav>
 
   </div>
 
+  <!-- App script -->
   <script src="apps.js" defer></script>
 </body>
 </html>
