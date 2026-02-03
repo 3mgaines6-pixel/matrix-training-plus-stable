@@ -1,6 +1,6 @@
 /* ============================================================
-   MACHINE  
-   MAP — NUMBER-FIRST LOOKUp
+   MACHINE, WORKOUTS, RULES, HISTORY, HELPERS
+   (unchanged core logic)
    ============================================================ */
 
 const M = {
@@ -21,14 +21,8 @@ const M = {
   ABD:    { id: "ABD",    number: 14, name: "HIP ABDUCTOR",       muscle: "Glutes" }
 };
 
-/* Build reverse lookup: number → machine object */
 const machineByNumber = {};
 Object.values(M).forEach(m => machineByNumber[m.number] = m);
-
-
-/* ============================================================
-   WORKOUT PLAN — USING MACHINE OBJECTS
-   ============================================================ */
 
 const workouts = {
   Monday: {
@@ -87,21 +81,11 @@ const workouts = {
   }
 };
 
-
-/* ============================================================
-   TRAINING RULES — PER TYPE
-   ============================================================ */
-
 const RULES = {
   HEAVY: { sets: 3, bottom: 6, top: 8, increment: 5 },
   LIGHT: { sets: 3, bottom: 10, top: 12, increment: 2.5 },
   CORE:  { sets: 3, bottom: 12, top: 15, increment: 0 }
 };
-
-
-/* ============================================================
-   HISTORY SYSTEM — NUMBER-FIRST KEYS
-   ============================================================ */
 
 function historyKey(machineNumber, type) {
   return `${machineNumber}_${type}`;
@@ -118,11 +102,6 @@ function saveHistory(machineNumber, type, session) {
   h.push(session);
   localStorage.setItem(key, JSON.stringify(h));
 }
-
-
-/* ============================================================
-   HELPERS
-   ============================================================ */
 
 function formatSession(session) {
   return session.sets.map(s => `${s.reps}@${s.weight}`).join(", ");
@@ -142,22 +121,20 @@ function earnedProgression(machineNumber, type) {
 
   return lastThree.every(s => s.sets.every(set => set.reps >= top));
 }
+
 /* ============================================================
-   SECTION 2 — DAY SELECTOR + SIMPLE EXERCISE LIST RENDERING
+   SECTION 2 — DAY SELECTOR + EXERCISE LIST
    ============================================================ */
 
-let selectedDay = "Monday";
+// persist selected day across reloads
+let selectedDay = localStorage.getItem("selectedDay") || "Monday";
 
-/* Render the entire screen */
 function render() {
   renderDayHeader();
   renderExerciseList();
-  renderBottomNav(); // optional, but keeps structure clean
+  renderBottomNav();
+  updateDayButtons();
 }
-
-/* ------------------------------------------------------------
-   DAY HEADER
-   ------------------------------------------------------------ */
 
 function renderDayHeader() {
   const day = workouts[selectedDay];
@@ -168,18 +145,11 @@ function renderDayHeader() {
   }
 }
 
-/* ------------------------------------------------------------
-   DAY SELECTOR (if you add buttons later)
-   ------------------------------------------------------------ */
-
 function selectDay(day) {
   selectedDay = day;
+  localStorage.setItem("selectedDay", selectedDay);
   render();
 }
-
-/* ------------------------------------------------------------
-   EXERCISE LIST — SIMPLE ROWS
-   ------------------------------------------------------------ */
 
 function renderExerciseList() {
   const container = document.getElementById("exercise-list");
@@ -200,7 +170,9 @@ function renderExerciseList() {
 
     const row = document.createElement("button");
     row.className = "exercise-row";
+    // defensive dataset: include both machine and type
     row.dataset.machine = machine.number;
+    row.dataset.type = type;
 
     row.innerHTML = `
       <div class="ex-title">#${machine.number} ${machine.name}</div>
@@ -215,16 +187,12 @@ function renderExerciseList() {
   });
 }
 
-/* ------------------------------------------------------------
-   OPTIONAL — Bottom Navigation (static for now)
-   ------------------------------------------------------------ */
-
 function renderBottomNav() {
-  // Your HTML already has static nav buttons.
-  // This function is here for future V2 expansion.
+  // placeholder for future nav rendering
 }
+
 /* ============================================================
-   SECTION 3 — DRAWER SYSTEM (CORRECTED)
+   SECTION 3 — DRAWER SYSTEM
    ============================================================ */
 
 let drawerMachine = null;
@@ -232,6 +200,7 @@ let drawerType = null;
 let tempoOpen = false;
 let restTimerId = null;
 let restSeconds = 0;
+
 function getSuggestedWeight(machineNumber, type) {
   const history = loadHistory(machineNumber, type);
   if (!history.length) return null;
@@ -250,10 +219,6 @@ function getSuggestedWeight(machineNumber, type) {
   return lastWeight;
 }
 
-/* ------------------------------------------------------------
-   OPEN DRAWER
-   ------------------------------------------------------------ */
-
 function openDrawer(machineNumber, type) {
   drawerMachine = machineNumber;
   drawerType = type;
@@ -261,70 +226,58 @@ function openDrawer(machineNumber, type) {
   const machine = machineByNumber[machineNumber];
   const rule = RULES[type];
 
-  // Header
-  document.getElementById("drawer-machine-name").textContent =
-    `#${machine.number} ${machine.name}`;
+  const nameEl = document.getElementById("drawer-machine-name");
+  const metaEl = document.getElementById("drawer-machine-meta");
+  const lastEl = document.getElementById("last-session-value");
+  const suggestedEl = document.getElementById("suggested-weight-value");
 
-  document.getElementById("drawer-machine-meta").textContent =
-    `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
+  if (nameEl) nameEl.textContent = `#${machine.number} ${machine.name}`;
+  if (metaEl) metaEl.textContent = `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
 
-  // Tempo collapsed by default
   tempoOpen = false;
-  document.getElementById("tempo-label").textContent = "Tempo ▸";
-  document.getElementById("tempo-value").classList.add("hidden");
+  const tempoLabel = document.getElementById("tempo-label");
+  const tempoValue = document.getElementById("tempo-value");
+  if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
+  if (tempoValue) tempoValue.classList.add("hidden");
 
-  // Last session
   const last = getLastSession(machineNumber, type);
-  document.getElementById("last-session-value").textContent =
-    last ? formatSession(last) : "None";
+  if (lastEl) lastEl.textContent = last ? formatSession(last) : "None";
 
-  // Suggested weight
   const suggested = getSuggestedWeight(machineNumber, type);
-  document.getElementById("suggested-weight-value").textContent =
-    suggested ? `${suggested} lb` : "—";
+  if (suggestedEl) suggestedEl.textContent = suggested ? `${suggested} lb` : "—";
 
-  // Clear set inputs
   document.querySelectorAll(".reps-input").forEach(i => i.value = "");
   document.querySelectorAll(".weight-input").forEach(i => i.value = "");
 
-  // Auto-fill weights if suggested exists
   if (suggested) {
     document.querySelectorAll(".weight-input").forEach(i => i.value = suggested);
   }
 
-  // Show drawer + overlay
-  document.getElementById("drawer").classList.add("open");
-  document.getElementById("overlay").classList.add("visible");
+  const drawer = document.getElementById("drawer");
+  const overlay = document.getElementById("overlay");
+  if (drawer) drawer.classList.add("open");
+  if (overlay) overlay.classList.add("visible");
 }
 
-/* ------------------------------------------------------------
-   CLOSE DRAWER
-   ------------------------------------------------------------ */
-
 function closeDrawer() {
-  document.getElementById("drawer").classList.remove("open");
-  document.getElementById("overlay").classList.remove("visible");
+  const drawer = document.getElementById("drawer");
+  const overlay = document.getElementById("overlay");
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("visible");
 
   drawerMachine = null;
   drawerType = null;
 }
 
-/* ------------------------------------------------------------
-   TEMPO TOGGLE
-   ------------------------------------------------------------ */
-
 function toggleTempo() {
   tempoOpen = !tempoOpen;
 
-  document.getElementById("tempo-label").textContent =
-    tempoOpen ? "Tempo ▾" : "Tempo ▸";
+  const tempoLabel = document.getElementById("tempo-label");
+  const tempoValue = document.getElementById("tempo-value");
 
-  document.getElementById("tempo-value").classList.toggle("hidden");
+  if (tempoLabel) tempoLabel.textContent = tempoOpen ? "Tempo ▾" : "Tempo ▸";
+  if (tempoValue) tempoValue.classList.toggle("hidden");
 }
-
-/* ------------------------------------------------------------
-   REST TIMER
-   ------------------------------------------------------------ */
 
 function startRestTimer() {
   if (restTimerId) clearInterval(restTimerId);
@@ -346,12 +299,9 @@ function startRestTimer() {
 function updateTimerDisplay() {
   const m = String(Math.floor(restSeconds / 60)).padStart(2, "0");
   const s = String(restSeconds % 60).padStart(2, "0");
-  document.getElementById("timer-display").textContent = `${m}:${s}`;
+  const el = document.getElementById("timer-display");
+  if (el) el.textContent = `${m}:${s}`;
 }
-
-/* ------------------------------------------------------------
-   LOGGING THE EXERCISE
-   ------------------------------------------------------------ */
 
 function logExercise() {
   if (!drawerMachine || !drawerType) return;
@@ -383,28 +333,54 @@ function logExercise() {
   saveHistory(drawerMachine, drawerType, session);
 
   closeDrawer();
-  render(); // refresh list + weekly summary
-}
-
-/* ------------------------------------------------------------
-   ATTACH EVENT LISTENERS INSIDE initApp()
-   ------------------------------------------------------------ */
-
-function attachDrawerListeners() {
-  document.getElementById("overlay").addEventListener("click", closeDrawer);
-  document.getElementById("close-drawer").addEventListener("click", closeDrawer);
-  document.getElementById("tempo-toggle").addEventListener("click", toggleTempo);
-  document.getElementById("start-timer").addEventListener("click", startRestTimer);
-  document.getElementById("log-button").addEventListener("click", logExercise);
+  render();
 }
 
 /* ============================================================
-   SECTION 4 — WEEKLY SUMMARY + INIT
+   SECTION 4 — LISTENERS, WEEKLY SUMMARY, INIT
    ============================================================ */
 
-/* ------------------------------------------------------------
-   WEEKLY SUMMARY (rolling 7 days)
-   ------------------------------------------------------------ */
+function attachDrawerListeners() {
+  const overlay = document.getElementById("overlay");
+  const closeBtn = document.getElementById("close-drawer");
+  const tempoBtn = document.getElementById("tempo-toggle");
+  const startBtn = document.getElementById("start-timer");
+  const logBtn = document.getElementById("log-button");
+
+  if (!overlay || !closeBtn || !tempoBtn || !startBtn || !logBtn) {
+    return setTimeout(attachDrawerListeners, 100);
+  }
+
+  overlay.addEventListener("click", closeDrawer);
+  closeBtn.addEventListener("click", closeDrawer);
+  tempoBtn.addEventListener("click", toggleTempo);
+  startBtn.addEventListener("click", startRestTimer);
+  logBtn.addEventListener("click", logExercise);
+
+  // Attach day button handlers (defensive)
+  document.querySelectorAll(".day-button").forEach(btn => {
+    if (!btn.__dayAttached) {
+      btn.addEventListener("click", () => selectDay(btn.dataset.day || btn.textContent.trim()));
+      btn.__dayAttached = true;
+    }
+  });
+}
+
+function attachDayButtons() {
+  document.querySelectorAll(".day-button").forEach(btn => {
+    if (!btn.__dayAttached) {
+      btn.addEventListener("click", () => selectDay(btn.dataset.day || btn.textContent.trim()));
+      btn.__dayAttached = true;
+    }
+  });
+  updateDayButtons();
+}
+
+function updateDayButtons() {
+  document.querySelectorAll(".day-button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.day === selectedDay);
+  });
+}
 
 function renderWeeklySummary() {
   const now = Date.now();
@@ -453,21 +429,21 @@ function renderWeeklySummary() {
   `;
 }
 
-/* ------------------------------------------------------------
-   INITIALIZATION
-   ------------------------------------------------------------ */
-
 function initApp() {
+  // restore selectedDay if present
+  selectedDay = localStorage.getItem("selectedDay") || selectedDay;
+
   render();
   renderWeeklySummary();
 
-  // Attach drawer event listeners AFTER DOM is ready
   attachDrawerListeners();
+  attachDayButtons();
 
   // Ensure drawer starts closed
-  document.getElementById("drawer").classList.remove("open");
-  document.getElementById("overlay").classList.remove("visible");
+  const drawer = document.getElementById("drawer");
+  const overlay = document.getElementById("overlay");
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("visible");
 }
 
-/* Run app on load */
 document.addEventListener("DOMContentLoaded", initApp);
