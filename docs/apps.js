@@ -230,18 +230,28 @@ function openDrawer(machineNumber, type) {
   const metaEl = document.getElementById("drawer-machine-meta");
   const lastEl = document.getElementById("last-session-value");
   const suggestedEl = document.getElementById("suggested-weight-value");
+if (nameEl) nameEl.textContent = `#${machine.number} ${machine.name}`;
+if (metaEl) metaEl.textContent = `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
 
-  if (nameEl) nameEl.textContent = `#${machine.number} ${machine.name}`;
-  if (metaEl) metaEl.textContent = `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
+// Reset tempo UI
+tempoOpen = false;
+const tempoLabel = document.getElementById("tempo-label");
+const tempoValue = document.getElementById("tempo-value");
+if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
+if (tempoValue) tempoValue.classList.add("hidden");
 
-  tempoOpen = false;
-  const tempoLabel = document.getElementById("tempo-label");
-  const tempoValue = document.getElementById("tempo-value");
-  if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
-  if (tempoValue) tempoValue.classList.add("hidden");
+// ⭐ Set tempo based on training type
+let t = "—";
+if (type === "HEAVY") t = "3-1-2";
+if (type === "LIGHT") t = "2-1-2";
+if (type === "CORE")  t = "2-2-2";
 
-  const last = getLastSession(machineNumber, type);
-  if (lastEl) lastEl.textContent = last ? formatSession(last) : "None";
+if (tempoValue) tempoValue.textContent = t;
+
+// Load last session
+const last = getLastSession(machineNumber, type);
+if (lastEl) lastEl.textContent = last ? formatSession(last) : "None";
+
 
   const suggested = getSuggestedWeight(machineNumber, type);
   if (suggestedEl) suggestedEl.textContent = suggested ? `${suggested} lb` : "—";
