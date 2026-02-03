@@ -349,23 +349,27 @@ function logExercise() {
 /* ============================================================
    SECTION 4 — LISTENERS, WEEKLY SUMMARY, INIT
    ============================================================ */
+function closeDrawer() {
+  drawerOpen = false;
+  tempoOpen = false;
 
-function attachDrawerListeners() {
+  const drawer = document.getElementById("drawer");
   const overlay = document.getElementById("overlay");
-  const closeBtn = document.getElementById("close-drawer");
-  const tempoBtn = document.getElementById("tempo-toggle");
-  const startBtn = document.getElementById("start-timer");
-  const logBtn = document.getElementById("log-button");
+  const tempoLabel = document.getElementById("tempo-label");
+  const tempoValue = document.getElementById("tempo-value");
 
-  if (!overlay || !closeBtn || !tempoBtn || !startBtn || !logBtn) {
-    return setTimeout(attachDrawerListeners, 100);
-  }
+  if (drawer) drawer.classList.remove("open");
+  if (overlay) overlay.classList.remove("visible");
 
-  overlay.addEventListener("click", closeDrawer);
-  closeBtn.addEventListener("click", closeDrawer);
-  tempoBtn.addEventListener("click", toggleTempo);
-  startBtn.addEventListener("click", startRestTimer);
-  logBtn.addEventListener("click", logExercise);
+  if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
+  if (tempoValue) tempoValue.classList.add("hidden");
+
+  if (typeof drawerMachine !== "undefined") drawerMachine = null;
+  if (typeof drawerType !== "undefined") drawerType = null;
+
+  if (typeof render === "function") render();
+}
+
 
   // Attach day button handlers (defensive)
   document.querySelectorAll(".day-button").forEach(btn => {
