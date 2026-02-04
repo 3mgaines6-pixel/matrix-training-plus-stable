@@ -16,6 +16,7 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
+
 .hidden {
   display: none;
 }
@@ -25,6 +26,7 @@ body {
    =========================== */
 
 .day-selector { display:flex; gap:8px; margin:12px 0; flex-wrap:wrap; }
+
 .day-button {
   padding:6px 10px;
   cursor:pointer;
@@ -35,9 +37,11 @@ body {
   font-weight:600;
   transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
 }
+
 .day-button:hover { transform: translateY(-1px); }
 .day-button:active { transform: translateY(0); }
 .day-button:focus { outline: 3px solid rgba(11,95,255,0.18); outline-offset: 2px; }
+
 .day-button.active {
   background:#0b5fff;
   color:#ffffff;
@@ -53,6 +57,7 @@ body {
   background: #fff;
   border-bottom: 1px solid #e6e6e6;
 }
+
 #day-title {
   font-size: 20px;
   font-weight: 700;
@@ -79,10 +84,22 @@ body {
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
   display:block;
 }
+
 .exercise-row:hover {
   background: #fbfbfb;
   transform: translateY(-2px);
-  box-shadow:
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* ===========================
+   APP CONTAINER
+   =========================== */
+
+#app {
+  position: relative;
+  z-index: 0;
+}
+
 /* ===========================
    DRAWER + OVERLAY
    =========================== */
@@ -94,6 +111,7 @@ body {
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.25s ease;
+  z-index: 900;
 }
 
 #overlay.visible {
@@ -102,12 +120,11 @@ body {
 }
 
 #drawer {
-  position: fixed;
+  position: fixed !important;
   left: 0;
   right: 0;
   bottom: 0;
 
-  /* Start hidden off-screen */
   transform: translateY(100%);
   transition: transform 0.3s ease;
 
