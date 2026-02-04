@@ -51,7 +51,7 @@ const workouts = {
     title: "FULL BODY",
     ex: [
       { m: M.PRESS,  t: "HEAVY" },
-      { m: M.CHEST,  t: "HEAVY" },
+      { m: M.CHEST,  t: "LIGHT" },
       { m: M.ROW,    t: "LIGHT" },
       { m: M.ABD,    t: "LIGHT" },
       { m: M.ABS,    t: "CORE"  }
