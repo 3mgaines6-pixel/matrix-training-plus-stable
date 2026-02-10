@@ -484,8 +484,14 @@ function getTodayWorkoutDay() {
 
 // App init (top-level)
 function initApp() {
-  // restore selectedDay if present
-  selectedDay = localStorage.getItem("selectedDay") || selectedDay;
+  // restore saved day OR auto-select today
+  const saved = localStorage.getItem("selectedDay");
+  if (saved) {
+    selectedDay = saved;
+  } else {
+    const today = getTodayWorkoutDay();
+    if (today) selectedDay = today;
+  }
 
   // Attach listeners and UI wiring
   attachDrawerListeners();
@@ -500,5 +506,6 @@ function initApp() {
   render();
   renderWeeklySummary();
 }
+
 
 document.addEventListener("DOMContentLoaded", initApp);
