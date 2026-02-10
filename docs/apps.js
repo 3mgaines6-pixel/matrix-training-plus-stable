@@ -470,6 +470,17 @@ function attachDrawerListeners() {
 
   console.log("Drawer delegation listeners attached");
 }
+function getTodayWorkoutDay() {
+  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon, 2=Tue, ...
+  const map = {
+    1: "Monday",
+    2: "Tuesday",
+    3: "Wednesday",
+    4: "Thursday",
+    5: "Friday"
+  };
+  return map[jsDay] || null;
+}
 
 // App init (top-level)
 function initApp() {
