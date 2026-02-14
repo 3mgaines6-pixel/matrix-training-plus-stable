@@ -230,8 +230,59 @@ function openDrawer(machineNumber, type) {
   const metaEl = document.getElementById("drawer-machine-meta");
   const lastEl = document.getElementById("last-session-value");
   const suggestedEl = document.getElementById("suggested-weight-value");
-if (nameEl) nameEl.textContent = `#${machine.number} ${machine.name}`;
-if (metaEl) metaEl.textContent = `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
+
+  if (nameEl) nameEl.textContent = `#${machine.number} ${machine.name}`;
+  if (metaEl) metaEl.textContent = `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
+
+  // Reset tempo UI
+  tempoOpen = false;
+  const tempoLabel = document.getElementById("tempo-label");
+  const tempoValue = document.getElementById("tempo-value");
+  if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
+  if (tempoValue) tempoValue.classList.add("hidden");
+
+  // Set tempo based on training type
+  let t = "—";
+  if (type === "HEAVY") t = "3-1-2";
+  if (type === "LIGHT") t = "2-1-2";
+  if (type === "CORE")  t = "2-2-2";
+  if (tempoValue) tempoValue.textContent = t;
+
+  // Load last session
+  const last = getLastSession(machineNumber, type);
+  if (lastEl) lastEl.textContent = last ? formatSession(last) : "None";
+
+  // Suggested weight
+  const suggested = getSuggestedWeight(machineNumber, type);
+  if (suggestedEl) suggestedEl.textContent = suggested ? `${suggested} lb` : "—";
+
+  // Reset inputs
+  document.querySelectorAll(".reps-input").forEach(i => i.value = "");
+  document.querySelectorAll(".weight-input").forEach(i => i.value = "");
+
+  if (suggested) {
+    document.querySelectorAll(".weight-input").forEach(i => i.value = suggested);
+  }
+
+  // ⭐ HANDLE POSITION TOGGLE
+  const handleToggle = document.getElementById("handle-toggle");
+
+  if (machineNumber === 2 || machineNumber === 6) {
+    handleToggle.classList.remove("hidden");
+  } else {
+    handleToggle.classList.add("hidden");
+  }
+
+  // Default to inner handles
+  const innerRadio = document.querySelector('input[name="handle-pos"][value="inner"]');
+  if (innerRadio) innerRadio.checked = true;
+
+  // Open drawer
+  const drawer = document.getElementById("drawer");
+  const overlay = document.getElementById("overlay");
+  if (drawer) drawer.classList.add("open");
+  if (overlay) overlay.classList.add("visible");
+}
 
 // Reset tempo UI
 tempoOpen = false;
@@ -334,6 +385,23 @@ function logExercise() {
     alert("Enter at least one set.");
     return;
   }
+
+  // ⭐ HANDLE POSITION
+  const handlePosition =
+    document.querySelector('input[name="handle-pos"]:checked')?.value || "inner";
+
+  const session = {
+    time: Date.now(),
+    sets,
+    handle: handlePosition
+  };
+
+  saveHistory(drawerMachine, drawerType, session);
+
+  closeDrawer();
+  render();
+}
+
 
   const session = {
     time: Date.now(),
