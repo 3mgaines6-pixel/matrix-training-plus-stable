@@ -366,4 +366,75 @@ function renderWeeklySummary() {
   const el = document.getElementById("weeklySummary");
   if (!el) return;
 
-  el
+  el.innerHTML = `
+    <h3>Last 7 Days Summary</h3>
+    <table>
+      <tr><th>Type</th><th>Total Sets</th><th>Top Reps</th><th>Top Weight</th></tr>
+      <tr><td>HEAVY</td><td>${totals.HEAVY.sets}</td><td>${totals.HEAVY.topReps}</td><td>${totals.HEAVY.topWeight}</td></tr>
+      <tr><td>LIGHT</td><td>${totals.LIGHT.sets}</td><td>${totals.LIGHT.topReps}</td><td>${totals.LIGHT.topWeight}</td></tr>
+      <tr><td>CORE</td><td>${totals.CORE.sets}</td><td>${totals.CORE.topReps}</td><td>${totals.CORE.topWeight}</td></tr>
+    </table>
+  `;
+}
+
+/* ============================================================
+   INIT
+   ============================================================ */
+
+function getTodayWorkoutDay() {
+  const jsDay = new Date().getDay();
+  const map = { 1: "Monday", 2: "Tuesday", 3: "Wednesday", 4: "Thursday", 5: "Friday" };
+  return map[jsDay] || null;
+}
+
+function initApp() {
+  const saved = localStorage.getItem("selectedDay");
+  if (saved) {
+    selectedDay = saved;
+  } else {
+    const today = getTodayWorkoutDay();
+    if (today) selectedDay = today;
+  }
+
+  attachDrawerListeners();
+  attachDayButtons();
+
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("overlay").classList.remove("visible");
+
+  render();
+  renderWeeklySummary();
+}
+
+function attachDayButtons() {
+  document.querySelectorAll(".day-button").forEach(btn => {
+    if (!btn.__dayAttached) {
+      btn.addEventListener("click", () => selectDay(btn.dataset.day));
+      btn.__dayAttached = true;
+    }
+  });
+  updateDayButtons();
+}
+
+function updateDayButtons() {
+  document.querySelectorAll(".day-button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.day === selectedDay);
+  });
+}
+
+function attachDrawerListeners() {
+  if (attachDrawerListeners._attached) return;
+  attachDrawerListeners._attached = true;
+
+  document.addEventListener("click", e => {
+    const t = e.target;
+
+    if (t.closest("#close-drawer")) return closeDrawer();
+    if (t.closest("#overlay")) return closeDrawer();
+    if (t.closest("#tempo-toggle")) return toggleTempo();
+    if (t.closest("#start-timer")) return startRestTimer();
+    if (t.closest("#log-button")) return logExercise();
+  });
+}
+
+document.addEventListener("DOMContentLoaded", initApp);
