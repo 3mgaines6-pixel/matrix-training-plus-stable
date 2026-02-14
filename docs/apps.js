@@ -8,16 +8,16 @@ const M = {
   CURL:   { id: "CURL",   number: 1,  name: "DEPENDENT CURL",     muscle: "Arms" },
   TRI:    { id: "TRI",    number: 2,  name: "TRICEPS PRESS",      muscle: "Arms" },
   ABS:    { id: "ABS",    number: 3,  name: "ABD CRUNCH",         muscle: "Core" },
-  BACK:   { id: "BACK",   number: 4,  name: "BACK EXTENSION",     muscle: "Lower Back" },
-  ROW:    { id: "ROW",    number: 5,  name: "SEATED ROW",         muscle: "Mid Back" },
-  SH:     { id: "SH",     number: 6,  name: "SHOULDER PRESS",     muscle: "Shoulders" },
-  CHEST:  { id: "CHEST",  number: 7,  name: "CHEST PRESS",        muscle: "Chest" },
-  LAT:    { id: "LAT",    number: 8,  name: "LAT PULLDOWN",       muscle: "Back" },
-  PEC:    { id: "PEC",    number: 9,  name: "PEC FLY / REAR DELT",muscle: "Chest / Rear Delts" },
-  PLC:    { id: "PLC",    number: 10, name: "PRONE LEG CURL",     muscle: "Hamstrings" },
-  LEGEXT: { id: "LEGEXT", number: 11, name: "LEG EXTENSION",      muscle: "Quads" },
-  ADD:    { id: "ADD",    number: 13, name: "HIP ADDUCTOR",       muscle: "Inner Thighs" },
-  ABD:    { id: "ABD",    number: 14, name: "HIP ABDUCTOR",       muscle: "Glutes" }
+  BACK:   { id: "BACK",    number: 4,  name: "BACK EXTENSION",     muscle: "Lower Back" },
+  ROW:    { id: "ROW",     number: 5,  name: "SEATED ROW",         muscle: "Mid Back" },
+  SH:     { id: "SH",      number: 6,  name: "SHOULDER PRESS",     muscle: "Shoulders" },
+  CHEST:  { id: "CHEST",   number: 7,  name: "CHEST PRESS",        muscle: "Chest" },
+  LAT:    { id: "LAT",     number: 8,  name: "LAT PULLDOWN",       muscle: "Back" },
+  PEC:    { id: "PEC",     number: 9,  name: "PEC FLY / REAR DELT",muscle: "Chest / Rear Delts" },
+  PLC:    { id: "PLC",     number: 10, name: "PRONE LEG CURL",     muscle: "Hamstrings" },
+  LEGEXT: { id: "LEGEXT",  number: 11, name: "LEG EXTENSION",      muscle: "Quads" },
+  ADD:    { id: "ADD",     number: 13, name: "HIP ADDUCTOR",       muscle: "Inner Thighs" },
+  ABD:    { id: "ABD",     number: 14, name: "HIP ABDUCTOR",       muscle: "Glutes" }
 };
 
 const machineByNumber = {};
@@ -112,6 +112,20 @@ function getLastSession(machineNumber, type) {
 function formatSession(session) {
   const base = session.sets.map(s => `${s.reps}@${s.weight}`).join(", ");
   return session.handle ? `${base} (${session.handle})` : base;
+}
+
+/* ============================================================
+   CARDIO HISTORY
+   ============================================================ */
+
+function loadCardio() {
+  return JSON.parse(localStorage.getItem("cardioHistory") || "[]");
+}
+
+function saveCardio(entry) {
+  const h = loadCardio();
+  h.push(entry);
+  localStorage.setItem("cardioHistory", JSON.stringify(h));
 }
 
 /* ============================================================
@@ -330,6 +344,40 @@ function logExercise() {
 }
 
 /* ============================================================
+   CARDIO DRAWER + LOGGING
+   ============================================================ */
+
+function openCardioDrawer() {
+  document.getElementById("cardio-drawer").classList.remove("hidden");
+  document.getElementById("overlay").classList.add("visible");
+}
+
+function closeCardioDrawer() {
+  document.getElementById("cardio-drawer").classList.add("hidden");
+  document.getElementById("overlay").classList.remove("visible");
+}
+
+function logCardio() {
+  const minutes = parseInt(document.getElementById("cardio-minutes").value, 10);
+  const miles = parseFloat(document.getElementById("cardio-miles").value);
+
+  if (!Number.isFinite(minutes) || minutes <= 0) {
+    alert("Enter minutes.");
+    return;
+  }
+
+  const entry = {
+    time: Date.now(),
+    minutes,
+    miles: Number.isFinite(miles) ? miles : 0
+  };
+
+  saveCardio(entry);
+  closeCardioDrawer();
+  renderWeeklySummary();
+}
+
+/* ============================================================
    WEEKLY SUMMARY
    ============================================================ */
 
@@ -375,6 +423,19 @@ function renderWeeklySummary() {
       <tr><td>CORE</td><td>${totals.CORE.sets}</td><td>${totals.CORE.topReps}</td><td>${totals.CORE.topWeight}</td></tr>
     </table>
   `;
+
+  // Cardio summary
+  const cardio = loadCardio().filter(e => e.time >= cutoff);
+  const totalMinutes = cardio.reduce((a, c) => a + c.minutes, 0);
+  const totalMiles = cardio.reduce((a, c) => a + c.miles, 0);
+
+  el.innerHTML += `
+    <h3>Cardio (Last 7 Days)</h3>
+    <table>
+      <tr><th>Sessions</th><th>Minutes</th><th>Miles</th></tr>
+      <tr><td>${cardio.length}</td><td>${totalMinutes}</td><td>${totalMiles.toFixed(2)}</td></tr>
+    </table>
+  `;
 }
 
 /* ============================================================
@@ -409,32 +470,4 @@ function initApp() {
 function attachDayButtons() {
   document.querySelectorAll(".day-button").forEach(btn => {
     if (!btn.__dayAttached) {
-      btn.addEventListener("click", () => selectDay(btn.dataset.day));
-      btn.__dayAttached = true;
-    }
-  });
-  updateDayButtons();
-}
-
-function updateDayButtons() {
-  document.querySelectorAll(".day-button").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.day === selectedDay);
-  });
-}
-
-function attachDrawerListeners() {
-  if (attachDrawerListeners._attached) return;
-  attachDrawerListeners._attached = true;
-
-  document.addEventListener("click", e => {
-    const t = e.target;
-
-    if (t.closest("#close-drawer")) return closeDrawer();
-    if (t.closest("#overlay")) return closeDrawer();
-    if (t.closest("#tempo-toggle")) return toggleTempo();
-    if (t.closest("#start-timer")) return startRestTimer();
-    if (t.closest("#log-button")) return logExercise();
-  });
-}
-
-document.addEventListener("DOMContentLoaded", initApp);
+      btn.addEventListener("
