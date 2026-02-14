@@ -5,10 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Matrix Training Plus</title>
 
-  <!-- Favicon (add a favicon.ico to the same folder) -->
   <link rel="icon" href="favicon.ico" sizes="32x32">
-
-  <!-- Styles -->
   <link rel="stylesheet" href="styles.css" />
 </head>
 
@@ -17,7 +14,6 @@
 
     <!-- Day Header -->
     <header id="day-header">
-      <!-- Day selector -->
       <div id="day-selector" class="day-selector">
         <button class="day-button" data-day="Monday">Monday</button>
         <button class="day-button" data-day="Tuesday">Tuesday</button>
@@ -30,49 +26,18 @@
     </header>
 
     <!-- Exercise List -->
-    <main id="exercise-list" aria-live="polite">
-      <!-- Example exercise rows (JS will render full list) -->
-      <button class="exercise-row" data-machine="7" data-type="HEAVY">
-        <div class="ex-title">#7 CHEST PRESS</div>
-        <div class="ex-sub">Chest • HEAVY • 3×6–8</div>
-      </button>
-
-      <button class="exercise-row" data-machine="8" data-type="HEAVY">
-        <div class="ex-title">#8 LAT PULLDOWN</div>
-        <div class="ex-sub">Back • HEAVY • 3×6–8</div>
-      </button>
-    </main>
+    <main id="exercise-list" aria-live="polite"></main>
 
     <!-- Dim Background Overlay -->
     <div id="overlay" aria-hidden="true"></div>
 
-    <!-- Slide-In Drawer -->
+    <!-- Strength Drawer -->
     <aside id="drawer" role="dialog" aria-modal="true" aria-hidden="true">
-<!-- CARDIO DRAWER -->
-<aside id="cardio-drawer" class="hidden">
-  <div id="cardio-content">
-    <h2>Cardio Log</h2>
-
-    <label>Minutes:</label>
-    <input id="cardio-minutes" inputmode="numeric" />
-
-    <label>Miles (optional):</label>
-    <input id="cardio-miles" inputmode="decimal" />
-
-    <div style="margin-top:12px; display:flex; gap:8px;">
-      <button id="cardio-log-button">Log Cardio</button>
-      <button id="cardio-close">Close</button>
-    </div>
-  </div>
-</aside>
-
-      <!-- Drawer Content -->
       <div id="drawer-content">
 
-        <!-- Machine Header -->
         <div id="drawer-header">
-          <h2 id="drawer-machine-name">#7 CHEST PRESS</h2>
-          <div id="drawer-machine-meta">Chest • HEAVY • 3×6–8</div>
+          <h2 id="drawer-machine-name"></h2>
+          <div id="drawer-machine-meta"></div>
         </div>
 
         <!-- Tempo Toggle -->
@@ -80,23 +45,24 @@
           <span id="tempo-label">Tempo ▸</span>
           <span id="tempo-value" class="hidden">3‑1‑2</span>
         </div>
-<!-- HANDLE POSITION TOGGLE (only visible for machines 2 and 6) -->
-<div id="handle-toggle" class="handle-toggle hidden">
-  <label class="handle-label">Handle Position:</label>
-  <div class="handle-options">
-    <label><input type="radio" name="handle-pos" value="inner" checked> Inner</label>
-    <label><input type="radio" name="handle-pos" value="outer"> Outer</label>
-  </div>
-</div>
+
+        <!-- Handle Toggle (only for machines 2 and 6) -->
+        <div id="handle-toggle" class="handle-toggle hidden">
+          <label class="handle-label">Handle Position:</label>
+          <div class="handle-options">
+            <label><input type="radio" name="handle-pos" value="inner" checked> Inner</label>
+            <label><input type="radio" name="handle-pos" value="outer"> Outer</label>
+          </div>
+        </div>
 
         <!-- Last Session -->
         <div id="last-session" class="muted">
-          Last: <span id="last-session-value">70 • 8/8/7</span>
+          Last: <span id="last-session-value">None</span>
         </div>
 
         <!-- Suggested Weight -->
         <div id="suggested-weight" class="muted">
-          Suggested: <span id="suggested-weight-value">72.5 lb</span>
+          Suggested: <span id="suggested-weight-value">—</span>
         </div>
 
         <!-- Set Inputs -->
@@ -126,7 +92,7 @@
           <div id="timer-display">00:00</div>
         </div>
 
-        <!-- Log and Close Buttons -->
+        <!-- Log + Close -->
         <div style="display:flex; gap:8px; margin-top:12px;">
           <button id="log-button" type="button">Log Exercise</button>
           <button id="close-drawer" type="button">Close</button>
@@ -135,16 +101,36 @@
       </div>
     </aside>
 
+    <!-- ⭐ SIMPLE CARDIO DRAWER -->
+    <aside id="cardio-drawer" class="hidden">
+      <div id="cardio-content">
+        <h2>Cardio Log</h2>
+
+        <label>Minutes:</label>
+        <input id="cardio-minutes" inputmode="numeric" />
+
+        <label>Miles (optional):</label>
+        <input id="cardio-miles" inputmode="decimal" />
+
+        <div style="margin-top:12px; display:flex; gap:8px;">
+          <button id="cardio-log-button">Log Cardio</button>
+          <button id="cardio-close">Close</button>
+        </div>
+      </div>
+    </aside>
+
     <!-- Bottom Navigation -->
     <nav id="bottom-nav" aria-label="Main navigation" style="margin:16px;">
-      <button type="button">Cardio</button>
+      <button type="button" id="nav-cardio">Cardio</button>
       <button type="button">Trends</button>
       <button type="button">Weekly</button>
     </nav>
 
+    <!-- Weekly Summary -->
+    <section id="weeklySummary"></section>
+
   </div>
 
-  <!-- App script -->
   <script src="apps.js" defer></script>
 </body>
 </html>
