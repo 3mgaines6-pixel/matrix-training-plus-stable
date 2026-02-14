@@ -1,6 +1,5 @@
 /* ============================================================
-   MACHINE, WORKOUTS, RULES, HISTORY, HELPERS
-   (unchanged core logic)
+   MACHINE MAP, WORKOUTS, RULES
    ============================================================ */
 
 const M = {
@@ -32,7 +31,7 @@ const workouts = {
       { m: M.SLC,    t: "LIGHT" },
       { m: M.ADD,    t: "LIGHT" },
       { m: M.ABD,    t: "LIGHT" },
-      { m: M.ABS,    t: "CORE"  }
+      { m: M.ABS,    t: "CORE" }
     ]
   },
 
@@ -54,7 +53,7 @@ const workouts = {
       { m: M.CHEST,  t: "LIGHT" },
       { m: M.ROW,    t: "LIGHT" },
       { m: M.ABD,    t: "LIGHT" },
-      { m: M.ABS,    t: "CORE"  }
+      { m: M.ABS,    t: "CORE" }
     ]
   },
 
@@ -65,7 +64,7 @@ const workouts = {
       { m: M.SLC,    t: "LIGHT" },
       { m: M.ADD,    t: "LIGHT" },
       { m: M.ABD,    t: "LIGHT" },
-      { m: M.BACK,   t: "CORE"  }
+      { m: M.BACK,   t: "CORE" }
     ]
   },
 
@@ -81,65 +80,55 @@ const workouts = {
   }
 };
 
- RULES = {
+const RULES = {
   HEAVY: { sets: 3, bottom: 6, top: 8, increment: 5 },
   LIGHT: { sets: 3, bottom: 10, top: 12, increment: 2.5 },
   CORE:  { sets: 3, bottom: 12, top: 15, increment: 0 }
 };
+
+/* ============================================================
+   HISTORY HELPERS
+   ============================================================ */
 
 function historyKey(machineNumber, type) {
   return `${machineNumber}_${type}`;
 }
 
 function loadHistory(machineNumber, type) {
-   key = historyKey(machineNumber, type);
-  return JSON.parse(localStorage.getItem(key) || "[]");
+  return JSON.parse(localStorage.getItem(historyKey(machineNumber, type)) || "[]");
 }
 
 function saveHistory(machineNumber, type, session) {
-   key = historyKey(machineNumber, type);
-   h = loadHistory(machineNumber, type);
+  const h = loadHistory(machineNumber, type);
   h.push(session);
-  localStorage.setItem(key, JSON.stringify(h));
-}
-
-function formatSession(session) {
-  return session.sets.map(s => `${s.reps}@${s.weight}`).join(", ");
+  localStorage.setItem(historyKey(machineNumber, type), JSON.stringify(h));
 }
 
 function getLastSession(machineNumber, type) {
-   h = loadHistory(machineNumber, type);
+  const h = loadHistory(machineNumber, type);
   return h.length ? h[h.length - 1] : null;
 }
 
-function earnedProgression(machineNumber, type) {
-   h = loadHistory(machineNumber, type);
-  if (h.length < 3) return false;
-
-   top = RULES[type].top;
-   lastThree = h.slice(-3);
-
-  return lastThree.every(s => s.sets.every(set => set.reps >= top));
+function formatSession(session) {
+  const base = session.sets.map(s => `${s.reps}@${s.weight}`).join(", ");
+  return session.handle ? `${base} (${session.handle})` : base;
 }
 
 /* ============================================================
-   SECTION 2 — DAY SELECTOR + EXERCISE LIST
+   DAY SELECTOR + RENDERING
    ============================================================ */
 
-// persist selected day across reloads
 let selectedDay = localStorage.getItem("selectedDay") || "Monday";
 
 function render() {
   renderDayHeader();
   renderExerciseList();
-  renderBottomNav();
   updateDayButtons();
 }
 
 function renderDayHeader() {
-   day = workouts[selectedDay];
-   titleEl = document.getElementById("day-title");
-
+  const day = workouts[selectedDay];
+  const titleEl = document.getElementById("day-title");
   if (day && titleEl) {
     titleEl.textContent = `${selectedDay} — ${day.title}`;
   }
@@ -152,16 +141,16 @@ function selectDay(day) {
 }
 
 function renderExerciseList() {
-   container = document.getElementById("exercise-list");
+  const container = document.getElementById("exercise-list");
   if (!container) return;
 
-   day = workouts[selectedDay];
+  const day = workouts[selectedDay];
   if (!day) {
     container.innerHTML = "<p>No workout found.</p>";
     return;
   }
 
-  container.innerHTML = ""; // clear existing
+  container.innerHTML = "";
 
   day.ex.forEach(ex => {
     const machine = ex.m;
@@ -170,7 +159,6 @@ function renderExerciseList() {
 
     const row = document.createElement("button");
     row.className = "exercise-row";
-    // defensive dataset: include both machine and type
     row.dataset.machine = machine.number;
     row.dataset.type = type;
 
@@ -179,20 +167,13 @@ function renderExerciseList() {
       <div class="ex-sub">${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}</div>
     `;
 
-    row.addEventListener("click", () => {
-      openDrawer(machine.number, type);
-    });
-
+    row.addEventListener("click", () => openDrawer(machine.number, type));
     container.appendChild(row);
   });
 }
 
-function renderBottomNav() {
-  // placeholder for future nav rendering
-}
-
 /* ============================================================
-   SECTION 3 — DRAWER SYSTEM
+   DRAWER SYSTEM
    ============================================================ */
 
 let drawerMachine = null;
@@ -205,18 +186,13 @@ function getSuggestedWeight(machineNumber, type) {
   const history = loadHistory(machineNumber, type);
   if (!history.length) return null;
 
-  const lastSession = history[history.length - 1];
-  const lastSet = lastSession.sets[lastSession.sets.length - 1];
-  const lastWeight = lastSet.weight;
-  const lastReps = lastSet.reps;
-
+  const last = history[history.length - 1];
+  const lastSet = last.sets[last.sets.length - 1];
   const rule = RULES[type];
 
-  if (lastReps >= rule.top) {
-    return lastWeight + rule.increment;
-  }
-
-  return lastWeight;
+  return lastSet.reps >= rule.top
+    ? lastSet.weight + rule.increment
+    : lastSet.weight;
 }
 
 function openDrawer(machineNumber, type) {
@@ -226,118 +202,71 @@ function openDrawer(machineNumber, type) {
   const machine = machineByNumber[machineNumber];
   const rule = RULES[type];
 
-  const nameEl = document.getElementById("drawer-machine-name");
-  const metaEl = document.getElementById("drawer-machine-meta");
-  const lastEl = document.getElementById("last-session-value");
-  const suggestedEl = document.getElementById("suggested-weight-value");
+  document.getElementById("drawer-machine-name").textContent =
+    `#${machine.number} ${machine.name}`;
 
-  if (nameEl) nameEl.textContent = `#${machine.number} ${machine.name}`;
-  if (metaEl) metaEl.textContent = `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
+  document.getElementById("drawer-machine-meta").textContent =
+    `${machine.muscle} • ${type} • ${rule.sets}×${rule.bottom}–${rule.top}`;
 
-  // Reset tempo UI
+  // Tempo reset
   tempoOpen = false;
-  const tempoLabel = document.getElementById("tempo-label");
-  const tempoValue = document.getElementById("tempo-value");
-  if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
-  if (tempoValue) tempoValue.classList.add("hidden");
+  document.getElementById("tempo-label").textContent = "Tempo ▸";
+  document.getElementById("tempo-value").classList.add("hidden");
 
-  // Set tempo based on training type
+  // Tempo value
   let t = "—";
   if (type === "HEAVY") t = "3-1-2";
   if (type === "LIGHT") t = "2-1-2";
   if (type === "CORE")  t = "2-2-2";
-  if (tempoValue) tempoValue.textContent = t;
+  document.getElementById("tempo-value").textContent = t;
 
-  // Load last session
+  // Last session
   const last = getLastSession(machineNumber, type);
-  if (lastEl) lastEl.textContent = last ? formatSession(last) : "None";
+  document.getElementById("last-session-value").textContent =
+    last ? formatSession(last) : "None";
 
   // Suggested weight
   const suggested = getSuggestedWeight(machineNumber, type);
-  if (suggestedEl) suggestedEl.textContent = suggested ? `${suggested} lb` : "—";
+  document.getElementById("suggested-weight-value").textContent =
+    suggested ? `${suggested} lb` : "—";
 
   // Reset inputs
   document.querySelectorAll(".reps-input").forEach(i => i.value = "");
-  document.querySelectorAll(".weight-input").forEach(i => i.value = "");
+  document.querySelectorAll(".weight-input").forEach(i => i.value = suggested || "");
 
-  if (suggested) {
-    document.querySelectorAll(".weight-input").forEach(i => i.value = suggested);
-  }
-
-  // ⭐ HANDLE POSITION TOGGLE
-  const handleToggle = document.getElementById("handle-toggle");
-
+  // Handle toggle (only machines 2 and 6)
+  const toggle = document.getElementById("handle-toggle");
   if (machineNumber === 2 || machineNumber === 6) {
-    handleToggle.classList.remove("hidden");
+    toggle.classList.remove("hidden");
   } else {
-    handleToggle.classList.add("hidden");
+    toggle.classList.add("hidden");
   }
-
-  // Default to inner handles
-  const innerRadio = document.querySelector('input[name="handle-pos"][value="inner"]');
-  if (innerRadio) innerRadio.checked = true;
+  document.querySelector('input[name="handle-pos"][value="inner"]').checked = true;
 
   // Open drawer
-  const drawer = document.getElementById("drawer");
-  const overlay = document.getElementById("overlay");
-  if (drawer) drawer.classList.add("open");
-  if (overlay) overlay.classList.add("visible");
-}
-
-// Reset tempo UI
-tempoOpen = false;
-const tempoLabel = document.getElementById("tempo-label");
-const tempoValue = document.getElementById("tempo-value");
-if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
-if (tempoValue) tempoValue.classList.add("hidden");
-
-// ⭐ Set tempo based on training type
-let t = "—";
-if (type === "HEAVY") t = "3-1-2";
-if (type === "LIGHT") t = "2-1-2";
-if (type === "CORE")  t = "2-2-2";
-
-if (tempoValue) tempoValue.textContent = t;
-
-// Load last session
-const last = getLastSession(machineNumber, type);
-if (lastEl) lastEl.textContent = last ? formatSession(last) : "None";
-
-
-  const suggested = getSuggestedWeight(machineNumber, type);
-  if (suggestedEl) suggestedEl.textContent = suggested ? `${suggested} lb` : "—";
-
-  document.querySelectorAll(".reps-input").forEach(i => i.value = "");
-  document.querySelectorAll(".weight-input").forEach(i => i.value = "");
-
-  if (suggested) {
-    document.querySelectorAll(".weight-input").forEach(i => i.value = suggested);
-  }
-
-  const drawer = document.getElementById("drawer");
-  const overlay = document.getElementById("overlay");
-  if (drawer) drawer.classList.add("open");
-  if (overlay) overlay.classList.add("visible");
+  document.getElementById("drawer").classList.add("open");
+  document.getElementById("overlay").classList.add("visible");
 }
 
 function closeDrawer() {
-  const drawer = document.getElementById("drawer");
-  const overlay = document.getElementById("overlay");
-  if (drawer) drawer.classList.remove("open");
-  if (overlay) overlay.classList.remove("visible");
+  document.getElementById("drawer").classList.remove("open");
+  document.getElementById("overlay").classList.remove("visible");
 
   drawerMachine = null;
   drawerType = null;
+
+  tempoOpen = false;
+  document.getElementById("tempo-label").textContent = "Tempo ▸";
+  document.getElementById("tempo-value").classList.add("hidden");
+
+  render();
 }
 
 function toggleTempo() {
   tempoOpen = !tempoOpen;
-
-  const tempoLabel = document.getElementById("tempo-label");
-  const tempoValue = document.getElementById("tempo-value");
-
-  if (tempoLabel) tempoLabel.textContent = tempoOpen ? "Tempo ▾" : "Tempo ▸";
-  if (tempoValue) tempoValue.classList.toggle("hidden");
+  document.getElementById("tempo-label").textContent =
+    tempoOpen ? "Tempo ▾" : "Tempo ▸";
+  document.getElementById("tempo-value").classList.toggle("hidden");
 }
 
 function startRestTimer() {
@@ -360,15 +289,14 @@ function startRestTimer() {
 function updateTimerDisplay() {
   const m = String(Math.floor(restSeconds / 60)).padStart(2, "0");
   const s = String(restSeconds % 60).padStart(2, "0");
-  const el = document.getElementById("timer-display");
-  if (el) el.textContent = `${m}:${s}`;
+  document.getElementById("timer-display").textContent = `${m}:${s}`;
 }
 
 function logExercise() {
   if (!drawerMachine || !drawerType) return;
 
-  const repsInputs = Array.from(document.querySelectorAll(".reps-input"));
-  const weightInputs = Array.from(document.querySelectorAll(".weight-input"));
+  const repsInputs = [...document.querySelectorAll(".reps-input")];
+  const weightInputs = [...document.querySelectorAll(".weight-input")];
 
   const sets = [];
 
@@ -381,79 +309,29 @@ function logExercise() {
     }
   }
 
-  if (sets.length === 0) {
+  if (!sets.length) {
     alert("Enter at least one set.");
     return;
   }
 
-  // ⭐ HANDLE POSITION
-  const handlePosition =
+  // Handle position (only for machines 2 and 6)
+  const handle =
     document.querySelector('input[name="handle-pos"]:checked')?.value || "inner";
 
   const session = {
     time: Date.now(),
     sets,
-    handle: handlePosition
+    handle
   };
 
   saveHistory(drawerMachine, drawerType, session);
 
   closeDrawer();
-  render();
-}
-
-
-  const session = {
-    time: Date.now(),
-    sets
-  };
-
-  saveHistory(drawerMachine, drawerType, session);
-
-  closeDrawer();
-  render();
 }
 
 /* ============================================================
-   SECTION 4 — LISTENERS, WEEKLY SUMMARY, INIT
+   WEEKLY SUMMARY
    ============================================================ */
-function closeDrawer() {
-  drawerOpen = false;
-  tempoOpen = false;
-
-  const drawer = document.getElementById("drawer");
-  const overlay = document.getElementById("overlay");
-  const tempoLabel = document.getElementById("tempo-label");
-  const tempoValue = document.getElementById("tempo-value");
-
-  if (drawer) drawer.classList.remove("open");
-  if (overlay) overlay.classList.remove("visible");
-
-  if (tempoLabel) tempoLabel.textContent = "Tempo ▸";
-  if (tempoValue) tempoValue.classList.add("hidden");
-
-  if (typeof drawerMachine !== "undefined") drawerMachine = null;
-  if (typeof drawerType !== "undefined") drawerType = null;
-
-  if (typeof render === "function") render();
-}
-
-
-function attachDayButtons() {
-  document.querySelectorAll(".day-button").forEach(btn => {
-    if (!btn.__dayAttached) {
-      btn.addEventListener("click", () => selectDay(btn.dataset.day || btn.textContent.trim()));
-      btn.__dayAttached = true;
-    }
-  });
-  updateDayButtons();
-}
-
-function updateDayButtons() {
-  document.querySelectorAll(".day-button").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.day === selectedDay);
-  });
-}
 
 function renderWeeklySummary() {
   const now = Date.now();
@@ -471,16 +349,13 @@ function renderWeeklySummary() {
       if (!h.length) return;
 
       const rule = RULES[type];
-      const lastMax = Math.max(
-        ...h[h.length - 1].sets.map(s => s.weight)
-      );
+      const lastMax = Math.max(...h[h.length - 1].sets.map(s => s.weight));
 
       h.forEach(session => {
         if (session.time < cutoff) return;
 
         session.sets.forEach(set => {
           totals[type].sets++;
-
           if (set.reps >= rule.top) totals[type].topReps++;
           if (set.weight >= lastMax) totals[type].topWeight++;
         });
@@ -491,89 +366,4 @@ function renderWeeklySummary() {
   const el = document.getElementById("weeklySummary");
   if (!el) return;
 
-  el.innerHTML = `
-    <h3>Last 7 Days Summary</h3>
-    <table>
-      <tr><th>Type</th><th>Total Sets</th><th>Top Reps</th><th>Top Weight</th></tr>
-      <tr><td>HEAVY</td><td>${totals.HEAVY.sets}</td><td>${totals.HEAVY.topReps}</td><td>${totals.HEAVY.topWeight}</td></tr>
-      <tr><td>LIGHT</td><td>${totals.LIGHT.sets}</td><td>${totals.LIGHT.topReps}</td><td>${totals.LIGHT.topWeight}</td></tr>
-      <tr><td>CORE</td><td>${totals.CORE.sets}</td><td>${totals.CORE.topReps}</td><td>${totals.CORE.topWeight}</td></tr>
-    </table>
-  `;
-}
-
-// Delegated drawer listeners (top-level)
-function attachDrawerListeners() {
-  if (attachDrawerListeners._attached) return;
-  attachDrawerListeners._attached = true;
-
-  document.addEventListener("click", function (e) {
-    const target = e.target;
-
-    if (target.closest && target.closest("#close-drawer")) {
-      closeDrawer();
-      return;
-    }
-
-    if (target.closest && target.closest("#overlay")) {
-      closeDrawer();
-      return;
-    }
-
-    if (target.closest && target.closest("#tempo-toggle")) {
-      toggleTempo();
-      return;
-    }
-
-    if (target.closest && target.closest("#start-timer")) {
-      startRestTimer();
-      return;
-    }
-
-    if (target.closest && target.closest("#log-button")) {
-      logExercise();
-      return;
-    }
-  });
-
-  console.log("Drawer delegation listeners attached");
-}
-function getTodayWorkoutDay() {
-  const jsDay = new Date().getDay(); // 0=Sun, 1=Mon, 2=Tue, ...
-  const map = {
-    1: "Monday",
-    2: "Tuesday",
-    3: "Wednesday",
-    4: "Thursday",
-    5: "Friday"
-  };
-  return map[jsDay] || null;
-}
-
-// App init (top-level)
-function initApp() {
-  // restore saved day OR auto-select today
-  const saved = localStorage.getItem("selectedDay");
-  if (saved) {
-    selectedDay = saved;
-  } else {
-    const today = getTodayWorkoutDay();
-    if (today) selectedDay = today;
-  }
-
-  // Attach listeners and UI wiring
-  attachDrawerListeners();
-  attachDayButtons();
-
-  // Ensure drawer starts closed
-  const drawer = document.getElementById("drawer");
-  const overlay = document.getElementById("overlay");
-  if (drawer) drawer.classList.remove("open");
-  if (overlay) overlay.classList.remove("visible");
-
-  render();
-  renderWeeklySummary();
-}
-
-
-document.addEventListener("DOMContentLoaded", initApp);
+  el
