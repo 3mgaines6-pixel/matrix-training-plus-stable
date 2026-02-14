@@ -48,6 +48,23 @@
 
     <!-- Slide-In Drawer -->
     <aside id="drawer" role="dialog" aria-modal="true" aria-hidden="true">
+<!-- CARDIO DRAWER -->
+<aside id="cardio-drawer" class="hidden">
+  <div id="cardio-content">
+    <h2>Cardio Log</h2>
+
+    <label>Minutes:</label>
+    <input id="cardio-minutes" inputmode="numeric" />
+
+    <label>Miles (optional):</label>
+    <input id="cardio-miles" inputmode="decimal" />
+
+    <div style="margin-top:12px; display:flex; gap:8px;">
+      <button id="cardio-log-button">Log Cardio</button>
+      <button id="cardio-close">Close</button>
+    </div>
+  </div>
+</aside>
 
       <!-- Drawer Content -->
       <div id="drawer-content">
