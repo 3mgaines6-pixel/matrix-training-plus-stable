@@ -138,3 +138,17 @@ body {
 #drawer.open {
   transform: translateY(0);
 }
+.handle-toggle {
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.handle-options {
+  display: flex;
+  gap: 20px;
+  margin-top: 5px;
+}
+
+.hidden {
+  display: none;
+}
