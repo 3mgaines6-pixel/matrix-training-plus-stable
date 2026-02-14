@@ -87,7 +87,7 @@ const RULES = {
 };
 
 /* ============================================================
-   HISTORY HELPERS
+   STRENGTH HISTORY
    ============================================================ */
 
 function historyKey(machineNumber, type) {
@@ -127,7 +127,6 @@ function saveCardio(entry) {
   h.push(entry);
   localStorage.setItem("cardioHistory", JSON.stringify(h));
 }
-
 /* ============================================================
    DAY SELECTOR + RENDERING
    ============================================================ */
@@ -187,7 +186,7 @@ function renderExerciseList() {
 }
 
 /* ============================================================
-   DRAWER SYSTEM
+   DRAWER SYSTEM (STRENGTH)
    ============================================================ */
 
 let drawerMachine = null;
@@ -342,7 +341,6 @@ function logExercise() {
 
   closeDrawer();
 }
-
 /* ============================================================
    CARDIO DRAWER + LOGGING
    ============================================================ */
@@ -378,7 +376,7 @@ function logCardio() {
 }
 
 /* ============================================================
-   WEEKLY SUMMARY
+   WEEKLY SUMMARY (STRENGTH + CARDIO)
    ============================================================ */
 
 function renderWeeklySummary() {
@@ -391,6 +389,7 @@ function renderWeeklySummary() {
     CORE:  { sets: 0, topReps: 0, topWeight: 0 }
   };
 
+  // Strength summary
   Object.values(M).forEach(machine => {
     ["HEAVY", "LIGHT", "CORE"].forEach(type => {
       const h = loadHistory(machine.number, type);
@@ -437,9 +436,8 @@ function renderWeeklySummary() {
     </table>
   `;
 }
-
 /* ============================================================
-   INIT
+   INIT + LISTENERS
    ============================================================ */
 
 function getTodayWorkoutDay() {
@@ -457,17 +455,100 @@ function initApp() {
     if (today) selectedDay = today;
   }
 
-  attachDrawerListeners();
   attachDayButtons();
+  attachDrawerListeners();
+  attachBottomNav();
 
+  // Ensure drawers start closed
   document.getElementById("drawer").classList.remove("open");
+  document.getElementById("cardio-drawer").classList.add("hidden");
   document.getElementById("overlay").classList.remove("visible");
 
   render();
   renderWeeklySummary();
 }
 
+/* ============================================================
+   DAY BUTTON LISTENERS
+   ============================================================ */
+
 function attachDayButtons() {
   document.querySelectorAll(".day-button").forEach(btn => {
-    if (!btn.__dayAttached) {
-      btn.addEventListener("
+    if (!btn.__attached) {
+      btn.addEventListener("click", () => selectDay(btn.dataset.day));
+      btn.__attached = true;
+    }
+  });
+  updateDayButtons();
+}
+
+function updateDayButtons() {
+  document.querySelectorAll(".day-button").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.day === selectedDay);
+  });
+}
+
+/* ============================================================
+   DRAWER + CARDIO LISTENERS
+   ============================================================ */
+
+function attachDrawerListeners() {
+  if (attachDrawerListeners._attached) return;
+  attachDrawerListeners._attached = true;
+
+  document.addEventListener("click", e => {
+    const t = e.target;
+
+    // Strength drawer close
+    if (t.closest("#close-drawer")) return closeDrawer();
+    if (t.closest("#overlay") && document.getElementById("drawer").classList.contains("open"))
+      return closeDrawer();
+
+    // Tempo toggle
+    if (t.closest("#tempo-toggle")) return toggleTempo();
+
+    // Rest timer
+    if (t.closest("#start-timer")) return startRestTimer();
+
+    // Log strength
+    if (t.closest("#log-button")) return logExercise();
+
+    // Cardio drawer close
+    if (t.closest("#cardio-close")) return closeCardioDrawer();
+  });
+
+  // Cardio log button
+  document.getElementById("cardio-log-button").addEventListener("click", logCardio);
+}
+
+/* ============================================================
+   BOTTOM NAV LISTENERS (Cardio, Trends, Weekly)
+   ============================================================ */
+
+function attachBottomNav() {
+  const cardioBtn = document.getElementById("nav-cardio");
+  const trendsBtn = document.querySelector("nav button:nth-child(2)");
+  const weeklyBtn = document.querySelector("nav button:nth-child(3)");
+
+  // Cardio drawer
+  cardioBtn.addEventListener("click", () => {
+    openCardioDrawer();
+  });
+
+  // Trends placeholder (simple alert for now)
+  trendsBtn.addEventListener("click", () => {
+    alert("Trends screen coming soon.");
+  });
+
+  // Weekly scroll-to-summary
+  weeklyBtn.addEventListener("click", () => {
+    document.getElementById("weeklySummary").scrollIntoView({ behavior: "smooth" });
+  });
+}
+
+/* ============================================================
+   START APP
+   ============================================================ */
+
+document.addEventListener("DOMContentLoaded", initApp);
+
